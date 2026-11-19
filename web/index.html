@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WellSense — early wellbeing signals</title>
+<script>try{var d=document.documentElement;d.dataset.theme=localStorage.getItem("ws.theme")||"light";if(localStorage.getItem("ws.lang")==="ar"){d.lang="ar";d.dir="rtl"}}catch(e){document.documentElement.dataset.theme="light"}</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='10' fill='%230E9F90'/%3E%3Cpath d='M5 17h5l3-7 4 13 3-8 2 2h5' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* WellSense — friendly, calm, readable. Light by default, dark on request. */
+:root,[data-theme="light"]{
+  --bg:#F4F2EC; --bg2:#F9F8F4; --panel:#FFFFFF; --raise:#EFECE4; --soft:rgba(15,60,55,.05); --border:rgba(15,50,45,.09); --border2:rgba(15,50,45,.17);
+  --text:#12302B; --muted:#566B67; --dim:#7F908C; --accent:#0E9F90; --accent2:#14B8A6; --accent-soft:rgba(14,159,144,.11); --ink:#FFFFFF;
+  --good:#16A34A; --goodText:#15803D; --good-soft:rgba(22,163,74,.10); --warn:#D97706; --warnText:#A15C07; --warn-soft:rgba(217,119,6,.10); --bad:#DC2626; --badText:#B91C1C; --bad-soft:rgba(220,38,38,.08);
+  --shadow:0 1px 2px rgba(20,50,45,.04),0 12px 32px -12px rgba(20,50,45,.14); --hero:linear-gradient(120deg,#D9F5EF 0%,#FDF3DC 55%,#FCE3D6 100%); --heroText:#12302B;
+  --chart-grid:rgba(15,50,45,.28);
+  color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#0A0D0E; --bg2:#0D1214; --panel:#11171A; --raise:#172024; --soft:rgba(255,255,255,.05); --border:rgba(255,255,255,.08); --border2:rgba(255,255,255,.15);
+  --text:#EEF4F2; --muted:#A3B4B0; --dim:#7F918E; --accent:#5EEAD4; --accent2:#2DD4BF; --accent-soft:rgba(94,234,212,.12); --ink:#04201C;
+  --good:#4ADE80; --goodText:#86EFAC; --good-soft:rgba(74,222,128,.10); --warn:#F5A524; --warnText:#FCD34D; --warn-soft:rgba(245,165,36,.10); --bad:#F87171; --badText:#FCA5A5; --bad-soft:rgba(248,113,113,.10);
+  --shadow:0 12px 32px -14px rgba(0,0,0,.6); --hero:linear-gradient(120deg,#0F2E2A 0%,#2A2614 60%,#2E1C16 100%); --heroText:#EEF4F2;
+  --chart-grid:rgba(255,255,255,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,'Segoe UI',sans-serif;font-size:15px;display:flex;flex-direction:column;transition:background .3s,color .3s}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:10px}
+.mono{font-family:'JetBrains Mono',Consolas,monospace} .muted{color:var(--muted)} .small{font-size:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.row-end{display:flex;justify-content:flex-end;gap:10px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+h1{margin:0;font-size:32px;font-weight:800;letter-spacing:-.03em}
+h2{margin:0;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px} h3{margin:0;font-size:17px}
+.mt{margin-top:18px}
+.eyebrow{margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.ico{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:12px 24px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:11px;min-width:230px;text-decoration:none;color:var(--text)}
+.brand>span{display:flex;flex-direction:column}
+.wordmark{font-size:20px;font-weight:800;letter-spacing:-.02em} .tag{font-size:11px;color:var(--muted)}
+.seg{display:flex;gap:4px;padding:5px;background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+.top .seg{margin:0 auto}
+.seg a,.seg button{height:38px;padding:0 14px;border-radius:11px;border:0;background:transparent;color:var(--muted);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:7px;text-decoration:none;cursor:pointer;transition:background .2s,color .2s}
+.seg a .ico{width:17px;height:17px}
+.seg a:hover,.seg button:hover{color:var(--text);background:var(--soft)}
+.seg .on{background:var(--accent);color:var(--ink)!important;box-shadow:0 6px 16px -8px var(--accent)}
+.top-right{display:flex;align-items:center;gap:8px;min-width:230px;justify-content:flex-end}
+.status{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-radius:12px;font-size:12px;font-weight:700;background:var(--panel);border:1px solid var(--border);color:var(--muted)}
+.status .dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.status.ok{color:var(--accent)} .status.ok .dot{background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);animation:pulse 2.4s infinite}
+.status.down{color:var(--badText)} .status.down .dot{background:var(--bad)}
+@keyframes pulse{50%{box-shadow:0 0 0 7px transparent}}
+.icon-btn{width:38px;height:38px;border-radius:12px;border:1px solid var(--border);background:var(--panel);color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.icon-btn:hover{color:var(--text)}
+.sos-btn{height:38px;padding:0 14px;border-radius:12px;background:#EF4444;color:#fff;font-weight:800;font-size:13px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:6px;text-decoration:none;box-shadow:0 8px 18px -8px rgba(239,68,68,.8)}
+.sos-btn:hover{filter:brightness(1.08)}
+
+/* layout */
+.page{flex:1;animation:fade .35s ease}
+.page[hidden]{display:none}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.wrap{max-width:1300px;margin:0 auto;padding:26px 28px 44px;display:flex;flex-direction:column;gap:20px;width:100%}
+.page-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px}
+.page-head p{margin:6px 0 0;max-width:640px}
+.two{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.panel{flex:1 1 460px;min-width:0;border-radius:22px;background:var(--panel);border:1px solid var(--border);padding:22px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
+
+/* buttons */
+.btn-primary{height:44px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--ink);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;cursor:pointer;box-shadow:0 10px 22px -12px var(--accent);transition:transform .15s}
+.btn-primary:hover{transform:translateY(-1px)} .btn-primary:disabled{opacity:.5;cursor:default;transform:none}
+.btn-ghost{height:42px;padding:0 16px;border-radius:13px;border:1px solid var(--border2);background:var(--panel);font-size:13px;font-weight:600;cursor:pointer;color:var(--text);display:inline-flex;align-items:center;gap:7px}
+.btn-ghost:hover{background:var(--soft)} .btn-ghost.sm{height:34px;font-size:12px;padding:0 12px} .btn-ghost.danger{border-color:color-mix(in srgb,var(--bad) 40%,transparent);color:var(--badText)}
+.lnk{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.chip{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 11px;border-radius:11px;background:var(--raise);border:1px solid var(--border);font-size:12px}
+.chip>span{color:var(--dim)} .chip select{background:transparent;border:0;outline:none;font-size:12px;font-weight:600;color:var(--text);max-width:230px} .chip option{background:var(--panel)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pills button{height:36px;padding:0 14px;border-radius:99px;border:1px solid var(--border2);background:var(--panel);color:var(--muted);font-size:13px;cursor:pointer}
+.pills button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--text);font-weight:700}
+
+/* greeting hero */
+.greet{position:relative;overflow:hidden;border-radius:28px;background:var(--hero);color:var(--heroText);padding:28px 30px;display:flex;flex-wrap:wrap;align-items:center;gap:24px;box-shadow:var(--shadow)}
+.greet .art{position:absolute;right:-20px;top:-30px;width:260px;height:260px;opacity:.9;pointer-events:none}
+.greet-main{flex:1 1 420px;position:relative;z-index:1;display:flex;flex-direction:column;gap:10px}
+.greet h1{font-size:34px}
+.greet p{margin:0;max-width:560px;color:color-mix(in srgb,var(--heroText) 75%,transparent);line-height:1.55}
+.prog{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600}
+.prog .track{flex:0 1 240px;height:10px;border-radius:99px;background:color-mix(in srgb,var(--heroText) 12%,transparent);overflow:hidden}
+.prog .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.badge{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:99px;background:color-mix(in srgb,var(--panel) 70%,transparent);font-size:12px;font-weight:700}
+.ring-card{position:relative;z-index:1;display:flex;align-items:center;gap:18px;padding:16px 20px;border-radius:22px;background:color-mix(in srgb,var(--panel) 82%,transparent);backdrop-filter:blur(6px)}
+.ring{position:relative;width:118px;height:118px}
+.ring svg{transform:rotate(-90deg)}
+.ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .val b{font-size:34px;font-weight:800;line-height:1} .ring .val span{font-size:11px;color:var(--muted)}
+.ring circle.prog-c{transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)}
+.ring-meta{display:flex;flex-direction:column;gap:4px}
+.ring-meta .mood-word{font-size:18px;font-weight:800}
+.up{color:var(--goodText)} .down{color:var(--warnText)}
+
+/* check-in */
+.trk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.trk{padding:16px;border-radius:18px;background:var(--bg2);border:1px solid var(--border);display:flex;flex-direction:column;gap:12px;transition:border-color .2s,box-shadow .2s}
+.trk.done{border-color:color-mix(in srgb,var(--accent) 45%,transparent);box-shadow:0 0 0 4px var(--accent-soft)}
+.trk.wide{grid-column:1/-1}
+.trk-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.trk-h .lab{display:flex;align-items:center;gap:9px}
+.trk-h .lab .bub{width:34px;height:34px;border-radius:11px;display:grid;place-items:center}
+.trk-h b{font-size:14px;color:var(--muted);font-weight:600}
+.faces{display:flex;gap:6px}
+.face{flex:1;aspect-ratio:1;max-height:52px;border-radius:14px;border:2px solid transparent;background:var(--panel);display:grid;place-items:center;cursor:pointer;transition:transform .15s,border-color .15s,background .15s;padding:4px}
+.face svg{width:100%;height:100%;max-width:36px}
+.face:hover{transform:translateY(-2px) scale(1.04)}
+.face.on{border-color:currentColor;transform:scale(1.08)}
+.scale-l{display:flex;justify-content:space-between;font-size:11px;color:var(--dim)}
+.glasses{display:flex;flex-wrap:wrap;gap:4px}
+.glass{width:30px;height:38px;border:0;background:transparent;padding:0;cursor:pointer;transition:transform .15s}
+.glass:hover{transform:translateY(-2px)}
+.glass svg{width:100%;height:100%}
+.trk input[type=range]{accent-color:var(--accent);width:100%;height:28px}
+.bar{height:10px;border-radius:99px;background:var(--raise);overflow:hidden} .bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#86EFAC,#16A34A);transition:width .5s}
+.inp{height:42px;padding:0 12px;border-radius:12px;border:1px solid var(--border2);background:var(--panel);color:var(--text);font-size:14px;outline:none;width:100%}
+textarea.inp{height:auto;padding:10px 12px;resize:vertical} .inp:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)} .inp.half{width:100px}
+.steps-q{display:flex;flex-wrap:wrap;gap:6px}
+.tags{display:flex;flex-wrap:wrap;gap:7px}
+.tagb{height:34px;padding:0 13px;border-radius:99px;border:1px solid var(--border2);background:var(--panel);color:var(--muted);font-size:13px;cursor:pointer}
+.tagb.on{border-color:var(--warn);background:var(--warn-soft);color:var(--warnText);font-weight:600}
+.flag{padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.45}
+.flag.ok{background:var(--good-soft);color:var(--goodText)} .flag.warn{background:var(--warn-soft);color:var(--warnText)} .flag.bad{background:var(--bad-soft);color:var(--badText)}
+
+/* signals */
+.sig-list{display:flex;flex-direction:column;gap:10px}
+.sig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+.sig{display:flex;gap:13px;padding:15px;border-radius:18px;background:var(--bg2);border:1px solid var(--border);animation:fade .4s ease both}
+.sig .ic{width:38px;height:38px;flex:none;border-radius:12px;display:grid;place-items:center}
+.sig .t{font-weight:700;font-size:14px} .sig .d{font-size:13px;color:var(--muted);line-height:1.5;margin-top:3px} .sig .a{font-size:13px;margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--panel);line-height:1.45}
+.sig.watch{border-color:color-mix(in srgb,var(--warn) 35%,transparent)} .sig.watch .ic{background:var(--warn-soft);color:var(--warn)}
+.sig.act{border-color:color-mix(in srgb,var(--bad) 40%,transparent);background:color-mix(in srgb,var(--bad) 4%,var(--bg2))} .sig.act .ic{background:var(--bad-soft);color:var(--bad)}
+.sig.good .ic{background:var(--good-soft);color:var(--good)}
+.sig.info .ic{background:var(--accent-soft);color:var(--accent)}
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px}
+.chartbox{padding:14px 16px;border-radius:18px;background:var(--bg2);border:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.chart{width:100%;height:130px} .empty-c{display:grid;place-items:center;height:130px}
+.ai-summary{padding:18px;border-radius:18px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);line-height:1.6}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-weight:700;padding:10px 12px;background:var(--bg2)}
+.tbl td{padding:11px 12px;border-top:1px solid var(--border)}
+.pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--raise);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--goodText)} .pill.warn{background:var(--warn-soft);color:var(--warnText)}
+
+/* mind check */
+.q{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--border)} .q:first-of-type{border-top:0}
+.q .qt{color:var(--text);font-weight:600;font-size:14px}
+.opts4{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.opts4 button{min-height:40px;border-radius:11px;border:1px solid var(--border2);background:var(--panel);color:var(--muted);font-size:12px;cursor:pointer}
+.opts4 button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--text);font-weight:700}
+.mind-cta{display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:linear-gradient(120deg,var(--accent-soft),transparent);border:1px dashed color-mix(in srgb,var(--accent) 45%,transparent)}
+
+/* coach */
+.ai-panel{min-height:620px}
+.coach-head{display:flex;align-items:center;gap:14px}
+.coach-av{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:grid;place-items:center;color:var(--ink);box-shadow:0 10px 22px -12px var(--accent)}
+.ai-scroll{flex:1;display:flex;flex-direction:column;gap:18px;max-height:58vh;min-height:300px;overflow:auto;padding:4px}
+.ai-empty{padding:18px 0;display:flex;flex-direction:column;gap:12px} .ai-empty[hidden]{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.qchip{padding:11px 15px;border-radius:14px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-size:13px;cursor:pointer;text-align:left;transition:transform .15s,border-color .15s}
+.qchip:hover{border-color:var(--accent);transform:translateY(-1px)} .qchip:disabled{opacity:.45;cursor:default;transform:none}
+.messages{display:flex;flex-direction:column;gap:18px}
+.u{align-self:flex-end;max-width:640px;padding:12px 16px;border-radius:20px 20px 6px 20px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--ink);line-height:1.55;white-space:pre-wrap;box-shadow:0 8px 20px -12px var(--accent)}
+.b{display:flex;gap:12px;align-items:flex-start}
+.b .av{width:36px;height:36px;flex:none;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.b .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:6px 20px 20px 20px;background:var(--bg2);border:1px solid var(--border)}
+.b .who{font-size:13px} .b .who b{margin-right:8px}
+.text{line-height:1.65;white-space:pre-wrap}
+.composer{border-radius:20px;background:var(--bg2);border:1px solid var(--border2);padding:12px;display:flex;flex-direction:column;gap:8px}
+.composer:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.comp-bottom{display:flex;align-items:flex-end;gap:10px} .grow{flex:1;display:flex}
+textarea#aiInput{flex:1;resize:none;background:transparent;border:0;outline:none;font-size:15px;line-height:1.5;padding:6px 4px}
+.send{width:46px;height:46px;border-radius:14px;border:0;background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--ink);display:grid;place-items:center;cursor:pointer;flex:none}
+.send:disabled{opacity:.45;cursor:default}
+.ctx{display:flex;align-items:center;gap:8px} .ctx input{accent-color:var(--accent)}
+.spin{display:inline-flex;align-items:center;gap:10px;color:var(--muted)}
+.spin::before{content:"";width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);border-top-color:var(--accent);animation:r 1s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+.err{color:var(--badText)}
+.emerg-inline{padding:13px 15px;border-radius:14px;background:var(--bad-soft);border:1px solid color-mix(in srgb,var(--bad) 40%,transparent);color:var(--badText);font-size:14px;line-height:1.6}
+.emerg-inline a,.md a{color:var(--badText);font-weight:700}
+
+/* safety */
+.sos{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:16px 18px;border-radius:20px;background:linear-gradient(90deg,#FEE2E2,#FFF1F1);border:1px solid #FCA5A5}
+[data-theme="dark"] .sos{background:linear-gradient(90deg,rgba(239,68,68,.18),rgba(239,68,68,.05));border-color:rgba(248,113,113,.35)}
+.sos-t{display:flex;flex-direction:column;margin-right:auto} .sos-t b{font-size:17px;color:#B91C1C} .sos-t span{font-size:13px;color:#DC2626}
+[data-theme="dark"] .sos-t b{color:#FECACA} [data-theme="dark"] .sos-t span{color:#FCA5A5}
+.sos-n{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:14px;background:#EF4444;color:#fff;font-weight:700;text-decoration:none;font-size:13px;box-shadow:0 8px 18px -10px rgba(239,68,68,.9)}
+.sos-n .mono{font-size:20px} .sos-n:hover{filter:brightness(1.08)} .sos-n.alt{background:#fff;color:#B91C1C;box-shadow:none;border:1px solid #FCA5A5}
+[data-theme="dark"] .sos-n.alt{background:rgba(255,255,255,.08);color:#FECACA;border-color:transparent}
+.nums{display:flex;flex-direction:column;gap:8px}
+.num{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:var(--bg2);border:1px solid var(--border);text-decoration:none;color:var(--text)}
+.num .n{font-size:22px;min-width:64px;color:#DC2626;font-weight:600}
+.num>span:last-child{display:flex;flex-direction:column}
+.num-big{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 30%,transparent)}
+.aid-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.aid-pill{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:11px 13px;border-radius:14px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;color:var(--text)}
+.aid-pill b{font-size:13px} .aid-pill span{color:var(--muted)} .aid-pill.urg{border-left:4px solid #EF4444}
+.aid-pill.on{border-color:var(--accent);background:var(--accent-soft)}
+.aid-card{padding:22px;border-radius:20px;background:var(--bg2);border:1px solid var(--border);display:flex;flex-direction:column;gap:12px;scroll-margin-top:90px}
+.aid-card .title{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0}
+.aid-when{margin:0;padding:11px 13px;border-radius:12px;background:var(--warn-soft);color:var(--warnText);font-size:14px;line-height:1.5}
+.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:10px}
+.steps li{counter-increment:s;position:relative;padding-left:40px;min-height:28px;font-size:15px;line-height:1.55}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:9px;background:var(--accent);color:var(--ink);font-weight:800;display:grid;place-items:center;font-size:13px}
+.small-steps li{font-size:13px;padding-left:34px} .small-steps li::before{width:24px;height:24px;font-size:11px;background:var(--raise);color:var(--text)}
+.aid-dont{padding:11px 14px;border-radius:12px;background:var(--bad-soft);font-size:13px} .aid-dont b{color:var(--badText)} .aid-dont ul{margin:6px 0 0;padding-left:18px}
+.btn-call{display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:12px;background:#EF4444;color:#fff;font-weight:700;text-decoration:none}
+.cpr{display:flex;flex-wrap:wrap;align-items:center;gap:18px;padding:16px;border-radius:16px;background:var(--panel);border:1px dashed var(--border2)}
+.cpr-ring{width:112px;height:112px;border-radius:50%;border:4px solid #EF4444;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cpr-ring .mono{font-size:26px} .cpr-ring.beat{animation:beat .3s ease-out}
+@keyframes beat{0%{transform:scale(1.12);background:rgba(239,68,68,.25)}100%{transform:scale(1);background:transparent}}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);font-weight:600}
+
+/* about */
+.hero{position:relative;overflow:hidden;padding:34px;border-radius:28px;background:var(--hero);color:var(--heroText);display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
+.hero h1{font-size:42px;max-width:820px}
+.lead{margin:0;font-size:17px;line-height:1.6;max-width:780px;color:color-mix(in srgb,var(--heroText) 80%,transparent)}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px}
+.step-card{flex:1 1 260px;padding:22px;border-radius:22px;background:var(--panel);border:1px solid var(--border);display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.step-card p{margin:0;color:var(--muted);line-height:1.55;font-size:14px}
+.step-ic{width:48px;height:48px;border-radius:15px;display:grid;place-items:center}
+.arrow{display:grid;place-items:center;color:var(--accent);font-size:26px}
+.ticks{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
+.ticks li{position:relative;padding-left:32px;line-height:1.55;font-size:14px;color:var(--muted)} .ticks li b{color:var(--text)}
+.ticks li::before{content:"✓";position:absolute;left:0;top:0;width:22px;height:22px;border-radius:7px;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:12px;display:grid;place-items:center}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:9px 16px;font-size:13px;margin:0}
+.kv dt{color:var(--muted);font-weight:600} .kv dd{margin:0}
+
+/* modal, toasts, confetti */
+.modal{position:fixed;inset:0;background:rgba(10,25,22,.45);backdrop-filter:blur(4px);display:grid;place-items:center;z-index:50;padding:16px}
+.modal[hidden]{display:none}
+.modal-card{max-width:560px;width:100%;max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:12px;box-shadow:0 30px 80px rgba(0,0,0,.25);animation:fade .25s ease}
+.toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:60}
+.toast{padding:13px 16px;border-radius:14px;background:var(--text);color:var(--bg);font-size:13px;font-weight:600;max-width:380px;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:fade .25s ease}
+.toast.bad{background:#B91C1C;color:#fff}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+.confetti i{position:absolute;top:-12px;width:9px;height:14px;border-radius:3px;animation:fall 1.8s ease-in forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.2}}
+
+@media (max-width:900px){ .top .seg{margin:0;order:3;width:100%;overflow:auto} .seg a span{display:none} .hero h1,.greet h1{font-size:28px} .arrow{display:none} .greet .art{opacity:.35} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* language button */
+.lang-btn{height:38px;padding:0 13px;border-radius:12px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-weight:700;font-size:13px;cursor:pointer;font-family:'IBM Plex Sans Arabic','Plus Jakarta Sans',sans-serif}
+.lang-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Arabic, right-to-left */
+[dir="rtl"] body{font-family:'IBM Plex Sans Arabic','Plus Jakarta Sans',Tahoma,sans-serif}
+[dir="rtl"] *{letter-spacing:0!important}
+[dir="rtl"] h1,[dir="rtl"] h2,[dir="rtl"] .wordmark{line-height:1.35}
+[dir="rtl"] .steps li{padding-left:0;padding-right:40px} [dir="rtl"] .steps li::before{left:auto;right:0}
+[dir="rtl"] .small-steps li{padding-right:34px}
+[dir="rtl"] .ticks li{padding-left:0;padding-right:32px} [dir="rtl"] .ticks li::before{left:auto;right:0}
+[dir="rtl"] .aid-pill.urg{border-left:1px solid var(--border);border-right:4px solid #EF4444}
+[dir="rtl"] .aid-dont ul{padding-left:0;padding-right:18px}
+[dir="rtl"] .greet .art{right:auto;left:-20px}
+[dir="rtl"] .u{border-radius:20px 20px 20px 6px}
+[dir="rtl"] .b .body{border-radius:20px 6px 20px 20px}
+[dir="rtl"] .num .n,[dir="rtl"] .mono,[dir="rtl"] .sos-n .mono{direction:ltr;unicode-bidi:isolate}
+[dir="rtl"] .toasts{right:auto;left:20px}
+[dir="rtl"] .eyebrow{letter-spacing:0}
+
+/* habits */
+.habs{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.hab{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:var(--bg2);border:1px solid var(--border)}
+.hab.done{border-color:color-mix(in srgb,var(--accent) 45%,transparent);box-shadow:0 0 0 4px var(--accent-soft)}
+.hab-ic{width:36px;height:36px;flex:none;border-radius:11px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.hab-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px} .hab-main b{font-size:14px}
+.hdots{display:flex;gap:4px} .hdot{width:14px;height:14px;border-radius:5px;background:var(--raise);border:1px solid var(--border)} .hdot.on{background:var(--accent);border-color:var(--accent)}
+.hab-count{white-space:nowrap}
+.hab-btn{height:34px;padding:0 12px;border-radius:11px;border:1px solid var(--border2);background:var(--panel);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.hab-btn.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+.hab-auto{font-size:11px;font-weight:700;padding:5px 10px;border-radius:99px;background:var(--raise);color:var(--muted);white-space:nowrap} .hab-auto.on{background:var(--good-soft);color:var(--goodText)}
+.hab-empty{padding:16px;border-radius:14px;background:var(--bg2);border:1px dashed var(--border2);color:var(--muted);font-size:14px}
+.badge-soft{font-size:12px;font-weight:700;padding:6px 12px;border-radius:99px;background:var(--accent-soft);color:var(--accent)} .badge-soft:empty{display:none}
+.hab-pick{display:flex;flex-direction:column;gap:6px}
+.hab-opt{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;border:1px solid var(--border2);background:var(--panel);color:var(--text);cursor:pointer;text-align:start;font-size:14px}
+.hab-opt span:nth-child(2){flex:1} .hab-opt.on{border-color:var(--accent);background:var(--accent-soft);font-weight:700}
+/* evaluation */
+.eval-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.eval-tiles .tile{padding:16px;border-radius:16px;background:var(--bg2);border:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
+.eval-tiles .tile b{font-size:30px;font-weight:800;color:var(--accent);line-height:1.1} .eval-tiles .tile span{font-size:13px;color:var(--muted)}
+
+[dir="rtl"] .tbl th,[dir="rtl"] .tbl td{text-align:right}
+
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#today" aria-label="WellSense home">
+    <svg width="38" height="38" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2DD4BF"/><stop offset="1" stop-color="#0E9F90"/></linearGradient></defs><rect width="32" height="32" rx="10" fill="url(#lg)"/><path d="M5 17h5l3-7 4 13 3-8 2 2h5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span><span class="wordmark" data-dyn>WellSense</span><span class="tag">Sense early · act sooner</span></span>
+  </a>
+  <nav class="seg" aria-label="Main">
+    <a href="#today" data-route="today"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span>Today</span></a>
+    <a href="#signals" data-route="signals"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span>Signals</span></a>
+    <a href="#coach" data-route="coach"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Coach</span></a>
+    <a href="#safety" data-route="safety"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M12 9v6M9 12h6"/></svg><span>Safety</span></a>
+    <a href="#about" data-route="about"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>About</span></a>
+  </nav>
+  <div class="top-right">
+    <span class="status" id="status" title="WellSense uses a private AI engine (Lemonade) on this computer"><span class="dot"></span><span id="statusText" data-dyn>Connecting…</span></span>
+    <button class="lang-btn" id="langBtn" type="button" aria-label="Switch language" data-dyn>عربي</button>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch light or dark theme" data-dyn></button>
+    <a class="sos-btn" href="#safety" aria-label="Emergency help"><svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>SOS</a>
+  </div>
+</header>
+
+<!-- TODAY -->
+<section class="page" id="page-today">
+  <div class="wrap">
+    <section class="greet">
+      <div class="art" id="greetArt" aria-hidden="true" data-dyn></div>
+      <div class="greet-main">
+        <p class="eyebrow" id="todayDate" data-dyn></p>
+        <h1 id="greet" data-dyn></h1>
+        <p>A one-minute check-in. WellSense learns what's normal for you and lets you know early when something starts to change.</p>
+        <div class="prog"><div class="track"><div class="fill" id="progFill"></div></div><span id="progText" data-dyn></span></div>
+        <div class="acts"><span class="badge" id="streak" data-dyn></span></div>
+      </div>
+      <div class="ring-card" id="scoreCard" data-dyn></div>
+    </section>
+    <div class="two">
+      <section class="panel" style="flex:2 1 620px">
+        <div class="row-between"><h2>Daily check-in</h2><span class="muted small">Saves automatically</span></div>
+        <div class="trk-grid" id="checkin" data-dyn></div>
+      </section>
+      <section class="panel" style="flex:1 1 340px">
+        <h2>Today's signals</h2>
+        <div id="todaySignals" class="sig-list" data-dyn></div>
+        <a class="btn-ghost lnk" href="#signals">See all signals and trends</a>
+        <div id="mindDue" data-dyn></div>
+      </section>
+    </div>
+    <section class="panel">
+      <div class="row-between" style="flex-wrap:wrap"><div><h2>My healthy habits</h2><p class="muted small" style="margin:4px 0 0">Pick up to 4 small daily habits. Sleep, water and steps tick themselves from your check-in.</p></div><div class="acts"><span class="badge-soft" id="habSummary" data-dyn></span><button class="btn-ghost sm" id="habEdit" type="button">Choose habits</button></div></div>
+      <div class="habs" id="habits" data-dyn></div>
+    </section>
+  </div>
+</section>
+
+<!-- SIGNALS -->
+<section class="page" id="page-signals" hidden>
+  <div class="wrap">
+    <div class="page-head">
+      <div><p class="eyebrow">Predict</p><h1>Signals</h1><p class="muted">Your last 3 days compared with your own normal — the 14 days before. Changes show up here before they become problems.</p></div>
+      <div class="acts"><button class="btn-ghost" id="mindBtn" type="button">🧠 Weekly mind check</button><button class="btn-primary" id="aiSummaryBtn" type="button">✨ AI weekly summary</button></div>
+    </div>
+    <section class="panel"><div id="aiSummary" hidden data-dyn></div><h2>Early signals</h2><div id="allSignals" class="sig-grid" data-dyn></div></section>
+    <section class="panel">
+      <div class="row-between" style="flex-wrap:wrap"><h2>Trends</h2><div class="pills" id="rangePills" role="group" aria-label="Range"><button type="button" data-r="14" class="on">14 days</button><button type="button" data-r="30">30 days</button></div></div>
+      <div class="chart-grid" id="charts" data-dyn></div>
+      <p class="muted small" style="margin:0">Dashed line = your normal. Shaded area = the last 3 days.</p>
+    </section>
+    <section class="panel">
+      <div class="row-between" style="flex-wrap:wrap"><h2>Mind check history</h2><span class="muted small">PHQ-2 (mood) and GAD-2 (anxiety) — short screening questions, not a diagnosis.</span></div>
+      <div id="mindHist" data-dyn></div>
+    </section>
+  </div>
+</section>
+
+<!-- COACH -->
+<section class="page" id="page-coach" hidden>
+  <div class="wrap">
+    <section class="panel ai-panel">
+      <div class="row-between" style="flex-wrap:wrap">
+        <div class="coach-head">
+          <span class="coach-av"><svg class="ico" viewBox="0 0 24 24" style="width:28px;height:28px" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span>
+          <div><h1 style="font-size:26px">Your coach</h1><p class="muted small" style="margin:3px 0 0">Private AI on this computer. Kind, practical, and it knows your check-ins if you let it. General information, not medical advice.</p></div>
+        </div>
+        <div class="acts"><label class="chip"><span>Model</span><select id="aiModel" aria-label="Model" data-dyn></select></label><button class="btn-ghost sm" id="aiNew" type="button">New chat</button></div>
+      </div>
+      <div id="aiSetup" hidden data-dyn></div>
+      <div class="ai-scroll" id="aiScroll">
+        <div id="aiEmpty" class="ai-empty">
+          <p style="margin:0;font-size:18px;font-weight:700">Hi! What would help today? 👋</p>
+          <p class="muted" style="margin:0">Pick a starter or type your own — in English, Arabic or Urdu.</p>
+          <div class="chips">
+            <button type="button" class="qchip" data-ask>Explain my early signals this week</button>
+            <button type="button" class="qchip" data-ask>Build me a habit plan from my data</button>
+            <button type="button" class="qchip" data-ask>Make me a simple 7-day plan to sleep better</button>
+            <button type="button" class="qchip" data-ask>Quick ways to lower stress at work</button>
+            <button type="button" class="qchip" data-ask>How do I stay well in very hot weather?</button>
+            <button type="button" class="qchip" data-ask>I feel low lately. What small steps can help?</button>
+          </div>
+        </div>
+        <div id="aiMsgs" class="messages" data-dyn></div>
+      </div>
+      <form id="aiForm" class="composer" autocomplete="off">
+        <div class="comp-bottom"><label class="grow"><span class="sr">Message</span><textarea id="aiInput" rows="2" placeholder="Talk to your coach…" dir="auto"></textarea></label><button type="submit" class="send" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
+        <label class="small muted ctx"><input type="checkbox" id="aiCtx" checked> Let the coach use my check-ins, signals and emergency card (never leaves this computer)</label>
+      </form>
+    </section>
+  </div>
+</section>
+
+<!-- SAFETY -->
+<section class="page" id="page-safety" hidden>
+  <div class="wrap">
+    <div class="row-between" style="flex-wrap:wrap">
+      <div><p class="eyebrow">Safety</p><h1>Help when it matters</h1></div>
+      <div class="acts"><span class="muted small">Where are you?</span><div class="pills" id="regionPills" role="group" aria-label="Region"><button type="button" data-region="pk">🇵🇰 Pakistan</button><button type="button" data-region="ae">🇦🇪 UAE</button></div></div>
+    </div>
+    <div class="sos" id="sosBar" role="region" aria-label="Emergency numbers" data-dyn></div>
+    <div class="two">
+      <section class="panel" style="flex:1 1 340px;max-width:440px">
+        <h2>Emergency numbers</h2>
+        <div class="nums" id="numbers" data-dyn></div>
+        <h2 class="mt">Health and support lines</h2>
+        <div class="nums" id="services" data-dyn></div>
+        <h2 class="mt">When you call</h2>
+        <ol class="steps small-steps">
+          <li>Say where you are — area, street, nearest landmark.</li>
+          <li>Say what happened and how many people are hurt.</li>
+          <li>Say if they are awake and breathing.</li>
+          <li>Give your phone number. Don't hang up until told to.</li>
+          <li>Send someone to meet the ambulance outside.</li>
+        </ol>
+      </section>
+      <section class="panel" style="flex:2 1 520px">
+        <h2>First aid — what's happening?</h2>
+        <div class="aid-list" id="aidList" data-dyn></div>
+        <article class="aid-card" id="aidCard" aria-live="polite" data-dyn></article>
+        <p class="muted small" style="margin:0">Based on NHS, Resuscitation Council UK, St John Ambulance, British Red Cross and Anaphylaxis UK guidance. A first aid course is the best way to practise.</p>
+      </section>
+    </div>
+    <section class="panel">
+      <div class="row-between" style="flex-wrap:wrap"><div><h2>My emergency card</h2><p class="muted small" style="margin:4px 0 0">Saved only on this computer. Print it for your wallet so responders know your allergies and medicines.</p></div><button class="btn-ghost" id="printCard" type="button">🖨 Print card</button></div>
+      <div class="card-grid" id="card" data-dyn></div>
+    </section>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="page" id="page-about" hidden>
+  <div class="wrap">
+    <section class="hero">
+      <p class="eyebrow">Future Health Digital Innovation Challenge 2026 · Wellbeing track</p>
+      <h1>To sense is to predict — on your own device.</h1>
+      <p class="lead">WellSense helps people notice changes in their wellbeing early, keep healthier habits, and get personal support over time — with an AI that runs entirely on their own computer, so their health data never leaves it.</p>
+      <div class="acts"><button class="btn-primary" id="demoBtn" type="button">▶ Load demo data</button><button class="btn-ghost" id="exportBtn" type="button">Export my data (CSV)</button><button class="btn-ghost danger" id="clearBtn" type="button">Delete all my data</button></div>
+    </section>
+    <section class="flow" aria-label="How WellSense works">
+      <div class="step-card"><span class="step-ic" style="background:#DBF4EF;color:#0E9F90"><svg class="ico" viewBox="0 0 24 24" style="width:26px;height:26px"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg></span><h3>1 · Sense</h3><p>One-minute daily check-in: mood, energy, stress, sleep, water, activity and optional blood pressure. A weekly two-question mood and anxiety check.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="step-card"><span class="step-ic" style="background:#FDF0D5;color:#C27803"><svg class="ico" viewBox="0 0 24 24" style="width:26px;height:26px"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><h3>2 · Predict</h3><p>WellSense learns each person's own baseline and flags early drifts — less sleep, rising stress, falling mood or activity — days before they add up.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="step-card"><span class="step-ic" style="background:#FCE4DA;color:#D9563B"><svg class="ico" viewBox="0 0 24 24" style="width:26px;height:26px"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span><h3>3 · Support</h3><p>A private AI coach turns those signals into small, practical next steps, and a safety layer points to emergency help and crisis lines when it matters.</p></div>
+    </section>
+    <section class="panel">
+      <h2>Evaluation on simulated users</h2>
+      <div id="evalBox" data-dyn></div>
+    </section>
+    <div class="two">
+      <section class="panel">
+        <h2>Why it matters</h2>
+        <ul class="ticks">
+          <li><b>Earlier, not later.</b> Personal baselines spot change sooner than one-size-fits-all thresholds.</li>
+          <li><b>Private by design.</b> All data and AI stay on the device. No account, no cloud, no upload.</li>
+          <li><b>Works offline and on modest hardware.</b> Tested on a 2018 laptop processor with no special AI chip.</li>
+          <li><b>Explainable.</b> Every signal says what changed, by how much, and compared with what.</li>
+          <li><b>Made for the region.</b> English and Arabic, with Pakistan and UAE emergency numbers and support lines.</li>
+          <li><b>Safe.</b> Red-flag words in English or Arabic trigger emergency guidance and local crisis numbers immediately.</li>
+        </ul>
+      </section>
+      <section class="panel">
+        <h2>How it's built</h2>
+        <dl class="kv" id="techKv" data-dyn></dl>
+        <h2 class="mt">Limits</h2>
+        <p class="muted small" style="margin:0;line-height:1.6">WellSense gives general wellbeing information and pattern alerts. It is not a medical device and does not diagnose. Screening questions (PHQ-2, GAD-2) suggest when to talk to a professional; they don't replace one. The Arabic screening wording is our translation, not the officially validated Arabic version. In an emergency call your local ambulance number.</p>
+      </section>
+    </div>
+    <p class="muted small">Independent entry for the Future Health Digital Innovation Challenge 2026 (Wellbeing track). Not affiliated with or endorsed by Future Health or its partners.</p>
+  </div>
+</section>
+
+<div class="modal" id="modal" hidden data-dyn>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody" class="muted"></div>
+    <div class="row-end" id="modalActs"><button class="btn-ghost" id="modalNo" type="button">Cancel</button><button class="btn-primary" id="modalYes" type="button">Confirm</button></div>
+  </div>
+</div>
+<div class="toasts" id="toasts" aria-live="polite" data-dyn></div>
+<script>
+"use strict";
+/* WellSense translations. Keys are the English text; values are Modern Standard Arabic.
+   First-aid guides use tokens filled per region: {AMB} ambulance number(s), {AMB1} main ambulance, {POL} police, {CRISIS} crisis line. */
+const I18N_AR = {
+  // app & header
+  "WellSense — early wellbeing signals": "WellSense — إشارات مبكرة للعافية", "WellSense home": "الصفحة الرئيسية لـ WellSense", "Sense early · act sooner": "استشعر مبكراً · تصرّف أسرع",
+  "Main": "رئيسي", "Today": "اليوم", "Signals": "الإشارات", "Coach": "المدرّب", "Safety": "السلامة", "About": "حول",
+  "WellSense uses a private AI engine (Lemonade) on this computer": "يستخدم WellSense محرّك ذكاء اصطناعي خاصاً (Lemonade) على هذا الحاسوب",
+  "Switch language": "تغيير اللغة", "Switch light or dark theme": "التبديل بين الوضع الفاتح والداكن", "Emergency help": "مساعدة طارئة", "SOS": "طوارئ",
+  "Private AI on": "الذكاء الاصطناعي الخاص يعمل", "AI engine offline": "محرّك الذكاء الاصطناعي متوقف", "Connecting…": "جارٍ الاتصال…",
+  "Couldn't save — browser storage is unavailable.": "تعذّر الحفظ — تخزين المتصفح غير متاح.", "Confirm": "تأكيد", "Cancel": "إلغاء",
+  // today
+  "A one-minute check-in. WellSense learns what's normal for you and lets you know early when something starts to change.": "تسجيل في دقيقة واحدة. يتعلّم WellSense ما هو طبيعي بالنسبة لك وينبّهك مبكراً عندما يبدأ شيء بالتغيّر.",
+  "Daily check-in": "التسجيل اليومي", "Saves automatically": "يُحفَظ تلقائياً", "Today's signals": "إشارات اليوم", "See all signals and trends": "عرض كل الإشارات والاتجاهات",
+  "Good morning": "صباح الخير", "Good afternoon": "مساء الخير", "Good evening": "مساء الخير",
+  "Check-in complete — nice work! 🎉": "اكتمل تسجيل اليوم — أحسنت! 🎉", "{n} of {m} done": "تم {n} من {m}",
+  "Mood": "المزاج", "Very low": "منخفض جداً", "Low": "منخفض", "Okay": "مقبول", "Good": "جيد", "Great": "ممتاز", "How do you feel?": "كيف تشعر؟",
+  "Energy": "الطاقة", "Drained": "مُنهَك", "High": "مرتفع", "How's your energy?": "كيف طاقتك؟",
+  "Stress": "التوتر", "Calm": "هادئ", "Mild": "خفيف", "Some": "متوسط", "Very high": "مرتفع جداً", "How stressed are you?": "ما مدى توترك؟",
+  "Headache": "صداع", "Poor appetite": "ضعف الشهية", "Anxious": "قلق", "Irritable": "سريع الانفعال", "Body aches": "آلام في الجسم", "Trouble focusing": "صعوبة في التركيز", "Lonely": "شعور بالوحدة", "Tired all day": "تعب طوال اليوم",
+  "Very high ({v}). With chest pain, breathlessness, weakness or vision changes, call {amb} now. Otherwise re-check in 5 minutes and contact a doctor today.": "مرتفع جداً ({v}). إذا صاحبه ألم في الصدر أو ضيق في التنفس أو ضعف أو تغيّر في الرؤية، اتصل بـ {amb} الآن. وإلا فأعد القياس بعد 5 دقائق وتواصل مع طبيب اليوم.",
+  "Above the usual target (under 140/90). If it stays high, see a doctor.": "أعلى من الهدف المعتاد (أقل من 140/90). إذا بقي مرتفعاً، راجع الطبيب.",
+  "Low. If dizzy or faint, sit or lie down and seek advice.": "منخفض. إذا شعرت بدوار أو إغماء، اجلس أو استلقِ واطلب المشورة.", "In the normal range.": "ضمن المعدل الطبيعي.",
+  "How long did you sleep?": "كم ساعة نمت؟", "{v} h": "{v} س", "Hours of sleep": "ساعات النوم", "Slide to set": "حرّك لتحديد المدة", "Great amount": "مدة ممتازة", "A bit short": "أقل قليلاً من اللازم", "Plenty": "كافية جداً",
+  "Water today": "الماء اليوم", "Glasses of water": "أكواب الماء", "{n} glasses": "{n} أكواب", "Tap a glass to fill up to it": "اضغط على كوب لتملأ حتى عنده", "Goal reached!": "تم بلوغ الهدف!",
+  "Steps today": "خطوات اليوم", "Type steps": "اكتب عدد الخطوات", "Goal {n}": "الهدف {n}",
+  "Blood pressure": "ضغط الدم", "optional": "اختياري", "Top": "العلوي", "Bottom": "السفلي", "Systolic, top number": "الانقباضي، الرقم العلوي", "Diastolic, bottom number": "الانبساطي، الرقم السفلي",
+  "Anything bothering you today?": "هل هناك ما يزعجك اليوم؟", "Notes (optional) — e.g. busy week, exams, travelling": "ملاحظات (اختياري) — مثل أسبوع مزدحم، امتحانات، سفر",
+  "Check-in complete — see you tomorrow! 🌿": "اكتمل التسجيل — نراك غداً! 🌿", "{n}-day streak": "سلسلة {n} يوم", "Start your streak today": "ابدأ سلسلتك اليوم",
+  "Weekly mind check is due": "حان موعد الفحص النفسي الأسبوعي", "4 quick questions · about 1 minute": "4 أسئلة سريعة · نحو دقيقة واحدة", "Start": "ابدأ",
+  "Check in to see it": "سجّل لتراه", "Doing great": "أنت بحال ممتازة", "Doing well": "أنت بحال جيدة", "Okay — go gently": "مقبول — ترفّق بنفسك", "Needs some care": "يحتاج إلى بعض العناية",
+  "of 100": "من 100", "Wellbeing today": "عافيتك اليوم", "7-day average:": "متوسط 7 أيام:", "{n} vs your week": "{n} مقارنة بأسبوعك",
+  // signals
+  "Predict": "التنبؤ", "Your last 3 days compared with your own normal — the 14 days before. Changes show up here before they become problems.": "آخر 3 أيام مقارنةً بمعدلك الطبيعي — الأيام الـ14 التي سبقتها. تظهر التغيّرات هنا قبل أن تتحوّل إلى مشكلات.",
+  "🧠 Weekly mind check": "🧠 الفحص النفسي الأسبوعي", "✨ AI weekly summary": "✨ ملخص أسبوعي بالذكاء الاصطناعي", "Early signals": "الإشارات المبكرة", "Trends": "الاتجاهات", "Range": "المدة", "14 days": "14 يوماً", "30 days": "30 يوماً",
+  "Dashed line = your normal. Shaded area = the last 3 days.": "الخط المتقطع = معدلك الطبيعي. المنطقة المظللة = آخر 3 أيام.", "Mind check history": "سجل الفحوص النفسية",
+  "PHQ-2 (mood) and GAD-2 (anxiety) — short screening questions, not a diagnosis.": "PHQ-2 (المزاج) وGAD-2 (القلق) — أسئلة فحص قصيرة وليست تشخيصاً.",
+  "Sleep": "النوم", "Activity": "النشاط", "Water": "الماء", "{v} points": "{v} نقاط", "{v} steps": "{v} خطوة", "{v} glasses": "{v} أكواب", "{v} (top number)": "{v} (الرقم العلوي)",
+  "Sleeping less than usual": "تنام أقل من المعتاد", "Sleeping more than usual": "تنام أكثر من المعتاد",
+  "Keep the same bedtime tonight, dim screens 30 minutes before, and avoid tea or coffee after 4 pm.": "حافظ على موعد النوم نفسه الليلة، وخفّف إضاءة الشاشات قبل النوم بـ30 دقيقة، وتجنّب الشاي أو القهوة بعد الساعة 4 عصراً.",
+  "Mood is lower than usual": "مزاجك أدنى من المعتاد", "Mood is up": "مزاجك أفضل", "Plan one small thing you enjoy today, and get some daylight or a short walk.": "خطّط لشيء صغير تستمتع به اليوم، واحصل على بعض ضوء النهار أو نزهة قصيرة.",
+  "Energy is dipping": "طاقتك تنخفض", "More energy than usual": "طاقة أكثر من المعتاد", "Check sleep, water and meals first. Short breaks every hour help.": "راجع نومك وشربك للماء ووجباتك أولاً. الاستراحات القصيرة كل ساعة تساعد.",
+  "Stress is rising": "التوتر يرتفع", "Stress has eased": "خفّ التوتر", "Try 4-7-8 breathing (in 4, hold 7, out 8) three times, and write down the one thing worrying you most.": "جرّب تنفّس 4-7-8 (شهيق 4، احبس 7، زفير 8) ثلاث مرات، واكتب أكثر شيء يقلقك.",
+  "Moving less than usual": "تتحرك أقل من المعتاد", "Moving more": "تتحرك أكثر", "Add a 10-minute walk after a meal — cooler early morning or evening in hot weather.": "أضف مشياً لمدة 10 دقائق بعد الوجبة — في الصباح الباكر أو المساء حيث الجو أبرد.",
+  "Drinking less water": "تشرب ماءً أقل", "Drinking more water": "تشرب ماءً أكثر", "Keep a bottle in sight and drink a glass with each meal; more on hot days.": "أبقِ زجاجة ماء أمامك واشرب كوباً مع كل وجبة، وأكثر في الأيام الحارة.",
+  "Blood pressure is above your usual": "ضغط دمك أعلى من معدلك المعتاد", "Blood pressure is lower than your usual": "ضغط دمك أقل من معدلك المعتاد", "Re-check at rest. If it stays at 140/90 or above, see a doctor.": "أعد القياس وأنت مرتاح. إذا بقي 140/90 أو أعلى، راجع الطبيب.",
+  "Learning your normal": "نتعرّف على معدلك الطبيعي", "WellSense needs about 5 days of check-ins to learn your baseline. {n} more to go — or load demo data on the About page.": "يحتاج WellSense إلى نحو 5 أيام من التسجيل ليتعرّف على معدلك الأساسي. بقي {n} — أو حمّل البيانات التجريبية من صفحة «حول».",
+  "lower": "أقل", "higher": "أعلى", "Last 3 days: {r}. Your normal: {b} — {amt}.": "آخر 3 أيام: {r}. معدلك الطبيعي: {b} — {amt}.", "Last 3 days: {r}, compared with your normal of {b}. Keep it up.": "آخر 3 أيام: {r}، مقارنة بمعدلك الطبيعي {b}. استمر!",
+  "Several signals are moving together": "عدة إشارات تتغير معاً", "{list} have all worsened over the last 3 days. Together these are an early sign of building stress, burnout or low mood.": "ساءت كلها خلال آخر 3 أيام: {list}. اجتماعها علامة مبكرة على تراكم التوتر أو الإنهاك أو انخفاض المزاج.",
+  "Talk it through with the Coach, ease your load this week, and reach out to someone you trust. If you feel unsafe, use Safety.": "تحدّث مع المدرّب، وخفّف أعباءك هذا الأسبوع، وتواصل مع شخص تثق به. إذا شعرت بعدم الأمان، استخدم صفحة «السلامة».",
+  "Low mood on several days": "مزاج منخفض لعدة أيام", "You've logged low mood on {n} of the last 7 days.": "سجّلت مزاجاً منخفضاً في {n} من آخر 7 أيام.", "Consider talking to a doctor or counsellor. {name} is {note}: {num}.": "فكّر في التحدث إلى طبيب أو مستشار نفسي. {name} — {note}: {num}.",
+  "Short sleep three nights running": "نوم قصير لثلاث ليالٍ متتالية", "Under 6 hours each of the last 3 nights ({list}).": "أقل من 6 ساعات في كل من آخر 3 ليالٍ ({list}).",
+  "{s} on {n} of the last 5 days": "{s} في {n} من آخر 5 أيام", "A repeating symptom is worth noticing.": "العَرَض المتكرر يستحق الانتباه.",
+  "Drink water, rest your eyes from screens, and see a doctor if headaches keep coming back, are severe, or come with fever, stiff neck or vision changes.": "اشرب الماء، وأرح عينيك من الشاشات، وراجع الطبيب إذا تكرر الصداع أو كان شديداً أو صاحبه حمى أو تيبّس في الرقبة أو تغيّر في الرؤية.",
+  "If it continues for more than two weeks or affects daily life, talk to a doctor.": "إذا استمر أكثر من أسبوعين أو أثّر على حياتك اليومية، تحدّث إلى طبيب.",
+  "Very high blood pressure today": "ضغط دم مرتفع جداً اليوم", "With chest pain, breathlessness, weakness or vision changes call {amb} now. Otherwise re-check in 5 minutes and contact a doctor today.": "إذا صاحبه ألم في الصدر أو ضيق تنفس أو ضعف أو تغيّر في الرؤية اتصل بـ {amb} الآن. وإلا فأعد القياس بعد 5 دقائق وتواصل مع طبيب اليوم.",
+  "Mind check: mood score is raised": "الفحص النفسي: درجة المزاج مرتفعة", "PHQ-2 score {n} of 6 (3 or more suggests checking in with a professional).": "درجة PHQ-2 هي {n} من 6 (3 أو أكثر تعني أنه يُستحسن مراجعة مختص).",
+  "This isn't a diagnosis. A doctor or counsellor can help — {name}: {num}.": "هذا ليس تشخيصاً. يمكن لطبيب أو مستشار نفسي أن يساعد — {name}: {num}.",
+  "Mind check: anxiety score is raised": "الفحص النفسي: درجة القلق مرتفعة", "GAD-2 score {n} of 6 (3 or more suggests checking in with a professional).": "درجة GAD-2 هي {n} من 6 (3 أو أكثر تعني أنه يُستحسن مراجعة مختص).",
+  "This isn't a diagnosis. Talking to a doctor or counsellor helps; the Coach can share calming techniques.": "هذا ليس تشخيصاً. التحدث إلى طبيب أو مستشار يساعد، ويمكن للمدرّب مشاركة تقنيات للتهدئة.",
+  "All steady": "كل شيء مستقر", "Nothing has drifted from your normal over the last 3 days.": "لم يبتعد شيء عن معدلك الطبيعي خلال آخر 3 أيام.", "No signals yet.": "لا توجد إشارات بعد.",
+  "Not enough entries yet": "لا توجد بيانات كافية بعد", "normal": "المعتاد", "Wellbeing index": "مؤشر العافية", "Sleep (hours)": "النوم (ساعات)", "Steps": "الخطوات", "Water (glasses)": "الماء (أكواب)", "Blood pressure (top)": "ضغط الدم (العلوي)",
+  "Date": "التاريخ", "Mood (PHQ-2)": "المزاج (PHQ-2)", "Anxiety (GAD-2)": "القلق (GAD-2)", "No mind checks yet.": "لا توجد فحوص نفسية بعد.",
+  // mind check
+  "Weekly mind check": "الفحص النفسي الأسبوعي", "Over the <b>last 2 weeks</b>, how often have you been bothered by…": "خلال <b>الأسبوعين الماضيين</b>، كم مرة انزعجت من…",
+  "Little interest or pleasure in doing things": "قلة الاهتمام أو المتعة في القيام بالأشياء", "Feeling down, depressed or hopeless": "الشعور بالحزن أو الاكتئاب أو اليأس",
+  "Feeling nervous, anxious or on edge": "الشعور بالعصبية أو القلق أو التوتر", "Not being able to stop or control worrying": "عدم القدرة على إيقاف القلق أو التحكم فيه",
+  "Not at all": "أبداً", "Several days": "عدة أيام", "More than half the days": "أكثر من نصف الأيام", "Nearly every day": "تقريباً كل يوم",
+  "PHQ-2 and GAD-2 screening questions. Your answers stay on this computer.": "أسئلة الفحص PHQ-2 وGAD-2 (ترجمة غير معتمدة رسمياً). تبقى إجاباتك على هذا الحاسوب.",
+  "Save": "حفظ", "Please answer all four questions.": "يرجى الإجابة عن الأسئلة الأربعة.", "low mood and anxiety": "انخفاض المزاج والقلق", "low mood": "انخفاض المزاج", "anxiety": "القلق",
+  "Your answers suggest {which} may be affecting you (mood {p}/6, anxiety {g}/6).": "تشير إجاباتك إلى أن {which} قد يؤثر عليك (المزاج {p}/6، القلق {g}/6).",
+  "This is a screening, not a diagnosis — but it's a good moment to talk to a doctor or counsellor.": "هذا فحص أولي وليس تشخيصاً — لكنه وقت مناسب للتحدث إلى طبيب أو مستشار نفسي.",
+  "If you ever feel unsafe, call {pol} or {amb} straight away.": "إذا شعرت يوماً بعدم الأمان، اتصل بـ {pol} أو {amb} فوراً.",
+  "Your scores are in the low range (mood {p}/6, anxiety {g}/6). Keep checking in weekly — WellSense will flag it if this changes.": "درجاتك ضمن النطاق المنخفض (المزاج {p}/6، القلق {g}/6). واصل الفحص أسبوعياً — سينبّهك WellSense إذا تغيّر ذلك.",
+  "Thanks for checking in": "شكراً على تسجيلك", "Done": "تم",
+  // coach
+  "Your coach": "مدرّبك", "Private AI on this computer. Kind, practical, and it knows your check-ins if you let it. General information, not medical advice.": "ذكاء اصطناعي خاص على هذا الحاسوب. لطيف وعملي، ويعرف تسجيلاتك إذا سمحت له. معلومات عامة وليست نصيحة طبية.",
+  "Model": "النموذج", "New chat": "محادثة جديدة", "Hi! What would help today? 👋": "مرحباً! ما الذي قد يساعدك اليوم؟ 👋", "Pick a starter or type your own — in English, Arabic or Urdu.": "اختر سؤالاً جاهزاً أو اكتب سؤالك — بالعربية أو الإنجليزية أو الأردية.",
+  "Explain my early signals this week": "اشرح لي إشاراتي المبكرة هذا الأسبوع", "Make me a simple 7-day plan to sleep better": "ضع لي خطة بسيطة لمدة 7 أيام لنوم أفضل", "Quick ways to lower stress at work": "طرق سريعة لتخفيف التوتر في العمل",
+  "How do I stay well in very hot weather?": "كيف أحافظ على صحتي في الطقس شديد الحرارة؟", "I feel low lately. What small steps can help?": "أشعر بالإحباط مؤخراً. ما الخطوات الصغيرة التي قد تساعد؟",
+  "Message": "الرسالة", "Talk to your coach…": "تحدّث إلى مدرّبك…", "Send": "إرسال", "Let the coach use my check-ins, signals and emergency card (never leaves this computer)": "السماح للمدرّب باستخدام تسجيلاتي وإشاراتي وبطاقة الطوارئ (لا تغادر هذا الحاسوب أبداً)",
+  "Waking up the coach… (10–30 seconds the first time)": "جارٍ تشغيل المدرّب… (10–30 ثانية في المرة الأولى)", "The local AI engine (Lemonade Server) isn't running. Start Lemonade, and the coach turns on by itself.": "محرّك الذكاء الاصطناعي المحلي (Lemonade Server) لا يعمل. شغّل Lemonade وسيعمل المدرّب تلقائياً.",
+  "The coach needs a chat model on this computer. Qwen3-4B-Instruct (2.5 GB) is recommended.": "يحتاج المدرّب إلى نموذج محادثة على هذا الحاسوب. يُنصح بـ Qwen3-4B-Instruct (2.5 غيغابايت).", "Download Qwen3-4B-Instruct": "تنزيل Qwen3-4B-Instruct",
+  "Download started — this takes a few minutes.": "بدأ التنزيل — يستغرق بضع دقائق.", "Thinking…": "يفكّر…", "{s} s · on this computer · general information, not medical advice": "{s} ث · على هذا الحاسوب · معلومات عامة وليست نصيحة طبية",
+  "You don't have to go through this alone.": "لست مضطراً لمواجهة هذا وحدك.", "If you might act on these thoughts, call {pol} or {amb} now.": "إذا كنت قد تتصرف بناءً على هذه الأفكار، اتصل بـ {pol} أو {amb} الآن.", "Talk to": "تحدّث إلى", "What to do": "ماذا أفعل",
+  "This could be an emergency.": "قد تكون هذه حالة طارئة.", "Call {amb} now.": "اتصل بـ {amb} الآن.", "or": "أو", "First aid:": "الإسعافات الأولية:", "The coach couldn't answer:": "تعذّر على المدرّب الإجابة:",
+  "The coach isn't ready — see the Coach page.": "المدرّب غير جاهز — راجع صفحة المدرّب.", "Your week, in brief": "أسبوعك باختصار",
+  // safety
+  "Help when it matters": "مساعدة عندما يهمّ الأمر", "Where are you?": "أين أنت؟", "Region": "المنطقة", "🇵🇰 Pakistan": "🇵🇰 باكستان", "🇦🇪 UAE": "🇦🇪 الإمارات",
+  "Emergency in the UAE?": "حالة طارئة في الإمارات؟", "Emergency in Pakistan?": "حالة طارئة في باكستان؟", "Call now — don't wait.": "اتصل الآن — لا تنتظر.", "Ambulance": "الإسعاف", "Police": "الشرطة", "Fire": "الإطفاء",
+  "Emergency numbers": "أرقام الطوارئ", "Health and support lines": "خطوط الصحة والدعم", "When you call": "عند الاتصال",
+  "Say where you are — area, street, nearest landmark.": "قل أين أنت — المنطقة، الشارع، أقرب معلم.", "Say what happened and how many people are hurt.": "قل ماذا حدث وكم عدد المصابين.", "Say if they are awake and breathing.": "قل إن كان المصاب واعياً ويتنفس.",
+  "Give your phone number. Don't hang up until told to.": "أعطِ رقم هاتفك. لا تُنهِ المكالمة حتى يُطلب منك.", "Send someone to meet the ambulance outside.": "أرسل شخصاً لاستقبال سيارة الإسعاف في الخارج.",
+  "First aid — what's happening?": "الإسعافات الأولية — ماذا يحدث؟",
+  "Based on NHS, Resuscitation Council UK, St John Ambulance, British Red Cross and Anaphylaxis UK guidance. A first aid course is the best way to practise.": "مستندة إلى إرشادات NHS ومجلس الإنعاش البريطاني وإسعاف سانت جون والصليب الأحمر البريطاني وAnaphylaxis UK. دورة الإسعافات الأولية هي أفضل طريقة للتدرّب.",
+  "My emergency card": "بطاقة الطوارئ الخاصة بي", "Saved only on this computer. Print it for your wallet so responders know your allergies and medicines.": "محفوظة على هذا الحاسوب فقط. اطبعها لمحفظتك ليعرف المسعفون الحساسية والأدوية لديك.", "🖨 Print card": "🖨 طباعة البطاقة",
+  "Rescue 1122": "إنقاذ 1122", "Ambulance, fire and rescue": "إسعاف وإطفاء وإنقاذ", "Edhi Ambulance": "إسعاف إيدهي", "Ambulance, nationwide": "إسعاف على مستوى البلاد", "Crime, threats, danger": "الجرائم والتهديدات والخطر",
+  "Fire Brigade": "فرقة الإطفاء", "Chhipa Ambulance": "إسعاف تشيبا", "Ambulance, mainly Karachi": "إسعاف، في كراتشي أساساً", "Motorway Police": "شرطة الطرق السريعة", "Motorway and highway accidents": "حوادث الطرق السريعة",
+  "Medical emergencies, anywhere in the UAE": "الحالات الطبية الطارئة في أي مكان بالإمارات", "Police emergencies": "حالات الشرطة الطارئة", "Civil Defence": "الدفاع المدني", "Fire and rescue": "الإطفاء والإنقاذ",
+  "Coastguard": "خفر السواحل", "Sea emergencies": "الطوارئ البحرية", "Search and Rescue": "البحث والإنقاذ", "Search and rescue": "البحث والإنقاذ",
+  "Umang": "أومنغ (Umang)", "Free 24/7 mental health helpline (confirm at umang.com.pk)": "خط مساعدة مجاني للصحة النفسية على مدار الساعة (تأكّد على umang.com.pk)",
+  "National Poison Control Centre, JPMC Karachi": "المركز الوطني لمكافحة السموم، JPMC كراتشي", "Toll-free; opened 2012 — may not answer 24/7": "مجاني؛ افتُتح 2012 — قد لا يرد على مدار الساعة",
+  "National Mental Support Line — call or WhatsApp, Arabic and English": "خط الدعم النفسي الوطني — اتصال أو واتساب، بالعربية والإنجليزية", "Itma'en (Dubai)": "اطمئن (دبي)", "Dubai mental health support line": "خط دعم الصحة النفسية في دبي",
+  "Dubai Health Authority (800 DHA)": "هيئة الصحة بدبي (800 DHA)", "24/7 health services and advice line": "خط الخدمات والاستشارات الصحية على مدار الساعة",
+  "Poison and Drug Information Service (DoH Abu Dhabi)": "خدمة معلومات السموم والأدوية (دائرة الصحة – أبوظبي)", "Weekdays 7am–11pm": "أيام العمل 7 ص – 11 م",
+  "Abu Dhabi residents can also book care and see health records in the Department of Health's Sahatna app.": "يمكن لسكان أبوظبي أيضاً حجز المواعيد والاطلاع على السجلات الصحية عبر تطبيق «صحتنا» التابع لدائرة الصحة.",
+  "Full name": "الاسم الكامل", "Blood group": "فصيلة الدم", "Allergies": "الحساسية", "Regular medicines": "الأدوية المنتظمة", "Medical conditions": "الحالات الطبية", "Emergency contact (name & phone)": "جهة اتصال الطوارئ (الاسم والهاتف)", "Doctor / hospital": "الطبيب / المستشفى",
+  "Allow pop-ups to print the card.": "اسمح بالنوافذ المنبثقة لطباعة البطاقة.", "Emergency card": "بطاقة الطوارئ", "EMERGENCY MEDICAL CARD": "بطاقة طبية للطوارئ", "In an emergency call": "في حالة الطوارئ اتصل بـ",
+  "Showing UAE numbers and services.": "يتم عرض أرقام وخدمات الإمارات.", "Showing Pakistan numbers and services.": "يتم عرض أرقام وخدمات باكستان.",
+  "Call {n}": "اتصل بـ {n}", "Don't": "لا تفعل", "Start CPR beat · 110/min": "ابدأ إيقاع الإنعاش · 110/دقيقة", "compressions": "ضغطة", "Push on every beat.": "اضغط مع كل نبضة.", "swap rescuers if you can": "بدّل المسعفين إن أمكن", "Stop beat": "أوقف الإيقاع",
+  // about
+  "Future Health Digital Innovation Challenge 2026 · Wellbeing track": "تحدي Future Health للابتكار الرقمي 2026 · مسار العافية", "To sense is to predict — on your own device.": "أن تستشعر يعني أن تتنبأ — على جهازك أنت.",
+  "WellSense helps people notice changes in their wellbeing early, keep healthier habits, and get personal support over time — with an AI that runs entirely on their own computer, so their health data never leaves it.": "يساعد WellSense الناس على ملاحظة التغيّرات في عافيتهم مبكراً، والحفاظ على عادات صحية، والحصول على دعم شخصي مع مرور الوقت — بذكاء اصطناعي يعمل بالكامل على حاسوبهم، فلا تغادر بياناتهم الصحية جهازهم أبداً.",
+  "▶ Load demo data": "▶ تحميل بيانات تجريبية", "Export my data (CSV)": "تصدير بياناتي (CSV)", "Delete all my data": "حذف جميع بياناتي", "How WellSense works": "كيف يعمل WellSense",
+  "1 · Sense": "1 · الاستشعار", "One-minute daily check-in: mood, energy, stress, sleep, water, activity and optional blood pressure. A weekly two-question mood and anxiety check.": "تسجيل يومي في دقيقة: المزاج، الطاقة، التوتر، النوم، الماء، النشاط وضغط الدم اختيارياً. وفحص أسبوعي من سؤالين للمزاج والقلق.",
+  "2 · Predict": "2 · التنبؤ", "WellSense learns each person's own baseline and flags early drifts — less sleep, rising stress, falling mood or activity — days before they add up.": "يتعلّم WellSense المعدل الأساسي لكل شخص وينبّه إلى الانحرافات المبكرة — نوم أقل، توتر متزايد، مزاج أو نشاط متراجع — قبل أن تتراكم بأيام.",
+  "3 · Support": "3 · الدعم", "A private AI coach turns those signals into small, practical next steps, and a safety layer points to emergency help and crisis lines when it matters.": "يحوّل مدرّب ذكاء اصطناعي خاص هذه الإشارات إلى خطوات صغيرة وعملية، وتوجّه طبقة السلامة إلى مساعدة الطوارئ وخطوط الأزمات عند الحاجة.",
+  "→": "←", "Why it matters": "لماذا هذا مهم",
+  "Earlier, not later.": "مبكراً لا متأخراً.", "Personal baselines spot change sooner than one-size-fits-all thresholds.": "المعدلات الشخصية تكشف التغيّر أسرع من الحدود الموحّدة للجميع.",
+  "Private by design.": "خاص بالتصميم.", "All data and AI stay on the device. No account, no cloud, no upload.": "تبقى جميع البيانات والذكاء الاصطناعي على الجهاز. لا حساب، لا سحابة، لا رفع.",
+  "Works offline and on modest hardware.": "يعمل دون إنترنت وعلى أجهزة متواضعة.", "Tested on a 2018 laptop processor with no special AI chip.": "تمت تجربته على معالج حاسوب محمول من عام 2018 دون شريحة ذكاء اصطناعي خاصة.",
+  "Explainable.": "قابل للتفسير.", "Every signal says what changed, by how much, and compared with what.": "كل إشارة توضّح ما الذي تغيّر وبأي مقدار ومقارنةً بماذا.",
+  "Made for the region.": "مصمَّم للمنطقة.", "English and Arabic, with Pakistan and UAE emergency numbers and support lines.": "بالعربية والإنجليزية، مع أرقام الطوارئ وخطوط الدعم في باكستان والإمارات.",
+  "Safe.": "آمن.", "Red-flag words in English or Arabic trigger emergency guidance and local crisis numbers immediately.": "الكلمات التحذيرية بالعربية أو الإنجليزية تُظهر فوراً إرشادات الطوارئ وأرقام الأزمات المحلية.",
+  "How it's built": "كيف بُني", "Limits": "الحدود",
+  "WellSense gives general wellbeing information and pattern alerts. It is not a medical device and does not diagnose. Screening questions (PHQ-2, GAD-2) suggest when to talk to a professional; they don't replace one. The Arabic screening wording is our translation, not the officially validated Arabic version. In an emergency call your local ambulance number.": "يقدّم WellSense معلومات عامة عن العافية وتنبيهات للأنماط. ليس جهازاً طبياً ولا يشخّص. أسئلة الفحص (PHQ-2، GAD-2) تقترح متى تتحدث إلى مختص ولا تُغني عنه. الصياغة العربية لأسئلة الفحص من ترجمتنا وليست النسخة العربية المعتمدة رسمياً. في حالة الطوارئ اتصل برقم الإسعاف المحلي.",
+  "Independent entry for the Future Health Digital Innovation Challenge 2026 (Wellbeing track). Not affiliated with or endorsed by Future Health or its partners.": "مشاركة مستقلة في تحدي Future Health للابتكار الرقمي 2026 (مسار العافية). غير تابعة لـ Future Health أو شركائها ولا معتمدة منهم.",
+  "Sense": "الاستشعار", "Support": "الدعم", "Languages": "اللغات", "Regions": "المناطق", "AI engine": "محرّك الذكاء الاصطناعي", "Runs on": "يعمل على", "Data": "البيانات", "not installed yet": "غير مثبّت بعد",
+  "Daily check-in (mood, energy, stress, sleep, water, steps, optional blood pressure, symptoms) and weekly PHQ-2 / GAD-2": "تسجيل يومي (المزاج، الطاقة، التوتر، النوم، الماء، الخطوات، ضغط الدم اختيارياً، الأعراض) وفحص أسبوعي PHQ-2 / GAD-2",
+  "Personal baseline: last 3 days vs the 14 days before, per measure, plus combined-pattern and repeated-symptom rules. Fully explainable.": "معدل أساسي شخصي: آخر 3 أيام مقابل الـ14 يوماً السابقة لكل مقياس، مع قواعد للأنماط المجتمعة والأعراض المتكررة. قابل للتفسير بالكامل.",
+  "Local AI coach ({m}) with emergency and crisis safeguards": "مدرّب ذكاء اصطناعي محلي ({m}) مع ضمانات للطوارئ والأزمات",
+  "English and Arabic (right-to-left); the coach can also reply in Urdu": "الإنجليزية والعربية (من اليمين لليسار)؛ ويمكن للمدرّب الرد بالأردية أيضاً",
+  "Pakistan and UAE emergency numbers, first aid and support lines": "أرقام الطوارئ والإسعافات الأولية وخطوط الدعم في باكستان والإمارات",
+  "Lemonade Server {v} on this computer — {s}": "Lemonade Server {v} على هذا الحاسوب — {s}", "running": "يعمل", "offline": "متوقف", "this computer's processor": "معالج هذا الحاسوب",
+  "Stored only in this browser on this device. No account, no cloud, nothing uploaded.": "تُخزَّن فقط في هذا المتصفح على هذا الجهاز. لا حساب، لا سحابة، لا رفع لأي بيانات.",
+  "Load demo data?": "تحميل البيانات التجريبية؟", "This replaces your current check-ins with 4 weeks of sample data that shows how early signals work. Your emergency card is kept.": "سيستبدل هذا تسجيلاتك الحالية ببيانات تجريبية لأربعة أسابيع توضّح كيف تعمل الإشارات المبكرة. ستبقى بطاقة الطوارئ كما هي.",
+  "Load demo": "تحميل", "Demo data loaded — see Today and Signals.": "تم تحميل البيانات التجريبية — اطّلع على «اليوم» و«الإشارات».", "Delete all your data?": "حذف جميع بياناتك؟",
+  "This removes every check-in, mind check and your emergency card from this computer. It can't be undone.": "سيحذف هذا جميع التسجيلات والفحوص النفسية وبطاقة الطوارئ من هذا الحاسوب. لا يمكن التراجع عن ذلك.", "Delete everything": "حذف الكل", "All data deleted.": "تم حذف جميع البيانات.",
+};
+
+/* ---------- First aid (English) ---------- */
+const AID_EN = [
+  {id: "cpr", t: "Not breathing / collapsed", tag: "CPR", urgent: true, kw: ["not breathing", "no pulse", "collapsed", "cardiac arrest", "unresponsive"], when: "They don't respond and aren't breathing normally (or only gasping).",
+   steps: ["Shout for help. Call {AMB} and put the phone on speaker.", "Heel of one hand in the centre of the chest, other hand on top, fingers locked.", "Arms straight, shoulders over your hands. Push down <b>5–6 cm</b>, let the chest come fully back up.", "Push at <b>100–120 a minute</b> — use the beat button below. Don't stop.", "If an AED (defibrillator) arrives, switch it on and follow its voice.", "Keep going until help takes over or they breathe normally. Swap rescuers every 2 minutes if you can."],
+   dont: ["Don't stop to check for a pulse.", "Not trained in rescue breaths? Hands-only CPR is fine."], note: "Child: about one-third of the chest depth (about 5 cm). Baby: two fingers, about 4 cm.", cpr: true},
+  {id: "choke", t: "Choking", tag: "Airway", urgent: true, kw: ["choking", "choke", "food stuck"], when: "They can't speak, cry, cough or breathe.",
+   steps: ["If they can cough, encourage them to keep coughing.", "Up to <b>5 sharp back blows</b> between the shoulder blades with the heel of your hand.", "Still blocked? Up to <b>5 abdominal thrusts</b>: stand behind, fist above the belly button, pull sharply in and up.", "Still blocked? Call {AMB} and repeat 5 back blows and 5 thrusts.", "If they become unresponsive, start CPR."],
+   dont: ["No abdominal thrusts for babies under 1 or pregnant women (babies: back blows and chest thrusts).", "Don't search their mouth blindly with your fingers."]},
+  {id: "heart", t: "Heart attack", tag: "Chest pain", urgent: true, kw: ["chest pain", "heart attack", "chest pressure", "chest tight", "pain in left arm"], when: "Chest pain or pressure that may spread to the arms, jaw, neck, back or stomach; sweating, breathlessness, feeling sick.",
+   steps: ["Call {AMB} straight away.", "Help them sit down comfortably, knees bent, head and shoulders supported.", "If over 16 and not allergic, give <b>one 300 mg aspirin</b> to chew slowly — only if one is close by.", "Stay with them and keep them calm.", "If they collapse and stop breathing normally, start CPR."], dont: ["Don't let them walk around or drive themselves."]},
+  {id: "stroke", t: "Stroke", tag: "FAST", urgent: true, kw: ["stroke", "face drooping", "slurred speech", "one side weak", "numb one side"], when: "<b>F</b>ace drooping · <b>A</b>rm weak · <b>S</b>peech slurred · <b>T</b>ime to call.",
+   steps: ["Call {AMB} — say you think it's a stroke.", "Note the time symptoms started.", "Keep them comfortable, head and shoulders slightly raised.", "If unresponsive but breathing, use the recovery position."], dont: ["No food, drink or medicine — swallowing may be affected."]},
+  {id: "bleed", t: "Severe bleeding", tag: "Bleeding", urgent: true, kw: ["bleeding heavily", "blood won't stop", "deep cut", "stab", "gunshot"], when: "Blood is flowing or spurting, or won't stop.",
+   steps: ["Call {AMB}.", "Press firmly on the wound with a clean cloth or your hand. Keep pressing.", "If blood soaks through, add more cloth on top — don't lift the first.", "Help them lie down and keep warm."], dont: ["Don't pull out anything stuck in the wound — press around it."]},
+  {id: "burn", t: "Burns and scalds", tag: "Burns", kw: ["burn", "scald", "boiling water"], when: "Cool · Call · Cover.",
+   steps: ["Stop the burning. Switch off power before touching someone with an electrical burn.", "<b>Cool under cool running water for 20 minutes</b> — still worth it up to 3 hours later.", "Remove jewellery and clothing near the burn unless stuck.", "Cover loosely with cling film laid over (not wrapped) or a clean non-fluffy cloth."], dont: ["No ice, butter, toothpaste, oil or creams.", "Don't burst blisters."], note: "Get medical help for large or deep burns, burns to face, hands, feet or genitals, chemical or electrical burns, and burns in children or older people."},
+  {id: "heat", t: "Heatstroke", tag: "Heat", urgent: true, kw: ["heatstroke", "heat stroke", "sunstroke", "not sweating", "loo lag"], when: "Very hot and confused, hot skin not sweating, fast breathing, a fit, or passing out.",
+   steps: ["Call {AMB} — heatstroke is an emergency.", "Move them somewhere cool and shaded.", "Remove extra clothing; cool skin with water and a fan; wet cloths on neck and armpits.", "If alert, give sips of cool water.", "If unresponsive but breathing, use the recovery position."], note: "Heat exhaustion should improve within 30 minutes of cooling and fluids. If not, treat it as heatstroke."},
+  {id: "allergy", t: "Severe allergic reaction", tag: "Anaphylaxis", urgent: true, kw: ["anaphylaxis", "allergic reaction", "throat swelling", "tongue swelling", "epipen"], when: "Swollen throat or tongue, trouble breathing, faint, pale or clammy — often after a food, sting or medicine.",
+   steps: ["Use their adrenaline auto-injector straight away, outer thigh.", "Call {AMB} and say “anaphylaxis”.", "Lie them down, legs raised (sit up if breathing is hard).", "No better after <b>5 minutes</b>? Use a second auto-injector if there is one.", "Keep them lying down even if better. CPR if they stop breathing."]},
+  {id: "seizure", t: "Seizure (fit)", tag: "Seizure", kw: ["seizure", "convulsion", "epilepsy", "mirgi"], when: "Sudden stiffening and jerking, often with loss of awareness.",
+   steps: ["Move hard objects away; cushion the head.", "Note the time it starts.", "When jerking stops, roll them into the recovery position.", "Call {AMB} if over 5 minutes, first seizure, injured, repeated, or not waking."], dont: ["Don't hold them down or put anything in their mouth."]},
+  {id: "recovery", t: "Unconscious but breathing", tag: "Recovery position", urgent: true, kw: ["unconscious", "fainted", "passed out", "won't wake up", "behosh"], when: "They don't respond but are breathing normally.",
+   steps: ["Call {AMB}.", "Near arm at a right angle.", "Far arm across the chest, back of the hand against their near cheek.", "Bend the far knee, pull it to roll them onto their side.", "Tilt the head back gently; keep checking breathing."], dont: ["If they stop breathing normally, start CPR."]},
+  {id: "poison", t: "Poisoning or overdose", tag: "Poison", urgent: true, kw: ["poison", "overdose", "took too many pills", "pesticide", "kerosene", "bleach", "wheat pill", "snake bite"], when: "Something harmful was swallowed, breathed in or injected, or a bite.",
+   steps: ["Call {AMB} or go to the nearest emergency department.", "Find out what, how much and when; take the packet.", "Unresponsive but breathing: recovery position. Not breathing: CPR.", "Chemicals on skin or eyes: rinse with lots of running water."], dont: ["Don't make them vomit or give anything to drink unless a doctor says so."]},
+  {id: "mind", t: "Mental health crisis", tag: "Crisis", urgent: true, kw: [], when: "Someone talks about ending their life, has a plan, or you think they're not safe.",
+   steps: ["If anyone is in immediate danger, call {POL} or {AMB1}.", "Stay with them, or make sure someone does. Remove anything they could use to hurt themselves, if safe.", "Listen calmly. Ask directly how they feel — it doesn't put the idea in their head.", "Help them contact {CRISIS}."], dont: ["Don't leave them alone if at risk.", "Don't promise to keep it secret."]},
+];
+
+/* ---------- First aid (Arabic) ---------- */
+const AID_AR = [
+  {id: "cpr", t: "لا يتنفس / انهار", tag: "الإنعاش القلبي", urgent: true, kw: [], when: "لا يستجيب ولا يتنفس بشكل طبيعي (أو يلهث فقط).",
+   steps: ["اطلب المساعدة بصوت عالٍ. اتصل بـ {AMB} وشغّل مكبّر الصوت.", "ضع راحة يدك في منتصف الصدر، واليد الأخرى فوقها مع تشبيك الأصابع.", "أبقِ ذراعيك مستقيمتين وكتفيك فوق يديك. اضغط للأسفل <b>5–6 سم</b> ثم دع الصدر يرتفع بالكامل.", "اضغط بمعدل <b>100–120 مرة في الدقيقة</b> — استخدم زر الإيقاع أدناه. لا تتوقف.", "إذا وصل جهاز الصدمات الكهربائية (AED)، شغّله واتبع تعليماته الصوتية.", "استمر حتى يتولى المسعفون أو يبدأ بالتنفس طبيعياً. بدّل مع شخص آخر كل دقيقتين إن أمكن."],
+   dont: ["لا تتوقف لتتحقق من النبض.", "إذا لم تتدرب على التنفس الإنقاذي، فالضغط على الصدر وحده كافٍ."], note: "الطفل: نحو ثلث عمق الصدر (قرابة 5 سم). الرضيع: بإصبعين، نحو 4 سم.", cpr: true},
+  {id: "choke", t: "الاختناق", tag: "مجرى الهواء", urgent: true, kw: [], when: "لا يستطيع الكلام أو البكاء أو السعال أو التنفس.",
+   steps: ["إذا كان يستطيع السعال، شجّعه على الاستمرار.", "حتى <b>5 ضربات قوية على الظهر</b> بين لوحي الكتف بقاعدة راحة اليد.", "ما زال مسدوداً؟ حتى <b>5 دفعات بطنية</b>: قف خلفه، ضع قبضتك فوق السرّة، واسحب بقوة للداخل والأعلى.", "ما زال مسدوداً؟ اتصل بـ {AMB} وكرّر 5 ضربات على الظهر و5 دفعات.", "إذا فقد الاستجابة، ابدأ الإنعاش القلبي."],
+   dont: ["لا دفعات بطنية للرضّع دون سنة أو للحوامل (للرضّع: ضربات على الظهر ودفعات على الصدر).", "لا تبحث في فمه بأصابعك دون رؤية."]},
+  {id: "heart", t: "النوبة القلبية", tag: "ألم في الصدر", urgent: true, kw: [], when: "ألم أو ضغط في الصدر قد يمتد إلى الذراعين أو الفك أو الرقبة أو الظهر أو البطن؛ مع تعرّق أو ضيق تنفس أو غثيان.",
+   steps: ["اتصل بـ {AMB} فوراً.", "ساعده على الجلوس براحة، مع ثني الركبتين وإسناد الرأس والكتفين.", "إذا كان فوق 16 عاماً وليس لديه حساسية، أعطه <b>قرص أسبرين واحداً 300 ملغ</b> ليمضغه ببطء — فقط إذا كان متوفراً بالقرب.", "ابقَ معه وحافظ على هدوئه.", "إذا انهار وتوقف عن التنفس الطبيعي، ابدأ الإنعاش القلبي."], dont: ["لا تدعه يمشي أو يقود السيارة بنفسه."]},
+  {id: "stroke", t: "السكتة الدماغية", tag: "FAST", urgent: true, kw: [], when: "<b>الوجه</b> متدلٍّ · <b>الذراع</b> ضعيفة · <b>الكلام</b> متلعثم · <b>الوقت</b> للاتصال.",
+   steps: ["اتصل بـ {AMB} — وقل إنك تعتقد أنها سكتة دماغية.", "سجّل وقت بدء الأعراض.", "حافظ على راحته، مع رفع الرأس والكتفين قليلاً.", "إذا فقد الاستجابة لكنه يتنفس، ضعه في وضعية الإفاقة."], dont: ["لا طعام ولا شراب ولا دواء — فقد يكون البلع متأثراً."]},
+  {id: "bleed", t: "النزيف الشديد", tag: "نزيف", urgent: true, kw: [], when: "الدم يسيل أو يندفع أو لا يتوقف.",
+   steps: ["اتصل بـ {AMB}.", "اضغط بقوة على الجرح بقطعة قماش نظيفة أو بيدك. واصل الضغط.", "إذا تشبّع القماش بالدم، أضف قطعة أخرى فوقه — لا ترفع الأولى.", "ساعده على الاستلقاء وأبقِه دافئاً."], dont: ["لا تنزع أي جسم عالق في الجرح — اضغط حوله."]},
+  {id: "burn", t: "الحروق والسلق", tag: "حروق", kw: [], when: "برّد · اتصل · غطِّ.",
+   steps: ["أوقف الحرق. افصل الكهرباء قبل لمس المصاب بحرق كهربائي.", "<b>برّد الحرق تحت ماء جارٍ بارد لمدة 20 دقيقة</b> — ويفيد ذلك حتى بعد 3 ساعات.", "انزع المجوهرات والملابس القريبة من الحرق ما لم تكن ملتصقة.", "غطِّه بغلاف بلاستيكي شفاف يوضع فوقه (لا يُلفّ) أو بقطعة قماش نظيفة لا تترك وبراً."], dont: ["لا ثلج ولا زبدة ولا معجون أسنان ولا زيت ولا كريمات.", "لا تفقأ الفقاعات."], note: "اطلب المساعدة الطبية للحروق الكبيرة أو العميقة، وحروق الوجه أو اليدين أو القدمين أو الأعضاء التناسلية، والحروق الكيميائية أو الكهربائية، وحروق الأطفال أو كبار السن."},
+  {id: "heat", t: "ضربة الشمس", tag: "حرارة", urgent: true, kw: [], when: "حرارة شديدة مع ارتباك، أو جلد ساخن لا يتعرّق، أو تنفس سريع، أو تشنج، أو إغماء.",
+   steps: ["اتصل بـ {AMB} — ضربة الشمس حالة طارئة.", "انقله إلى مكان بارد ومظلل.", "انزع الملابس الزائدة؛ برّد الجلد بالماء والمروحة؛ ضع قطع قماش مبللة على الرقبة والإبطين.", "إذا كان واعياً، أعطه رشفات من الماء البارد.", "إذا فقد الاستجابة لكنه يتنفس، ضعه في وضعية الإفاقة."], note: "يجب أن يتحسن الإجهاد الحراري خلال 30 دقيقة من التبريد وشرب السوائل. إن لم يتحسن، فتعامل معه كضربة شمس."},
+  {id: "allergy", t: "رد فعل تحسسي شديد", tag: "الحساسية المفرطة", urgent: true, kw: [], when: "تورم الحلق أو اللسان، صعوبة في التنفس، إغماء، شحوب أو تعرّق بارد — غالباً بعد طعام أو لسعة أو دواء.",
+   steps: ["استخدم حاقن الأدرينالين الذاتي فوراً في الجزء الخارجي من الفخذ.", "اتصل بـ {AMB} وقل «صدمة تحسسية».", "مدّده مع رفع الساقين (أو أجلسه إذا كان التنفس صعباً).", "لا تحسّن بعد <b>5 دقائق</b>؟ استخدم حاقناً ثانياً إن وُجد.", "أبقِه مستلقياً حتى لو تحسّن. ابدأ الإنعاش إذا توقف عن التنفس."]},
+  {id: "seizure", t: "نوبة صرع (تشنّج)", tag: "تشنّج", kw: [], when: "تيبّس وارتعاش مفاجئ، غالباً مع فقدان الوعي.",
+   steps: ["أبعد الأشياء الصلبة؛ ضع شيئاً ليناً تحت رأسه.", "سجّل وقت بدء النوبة.", "عندما يتوقف الارتعاش، ضعه في وضعية الإفاقة.", "اتصل بـ {AMB} إذا استمرت أكثر من 5 دقائق، أو كانت النوبة الأولى، أو أُصيب، أو تكررت، أو لم يستفق."], dont: ["لا تقيّد حركته ولا تضع أي شيء في فمه."]},
+  {id: "recovery", t: "فاقد الوعي لكنه يتنفس", tag: "وضعية الإفاقة", urgent: true, kw: [], when: "لا يستجيب لكنه يتنفس بشكل طبيعي.",
+   steps: ["اتصل بـ {AMB}.", "ضع الذراع القريبة منك بزاوية قائمة.", "ضع الذراع البعيدة عبر الصدر، وظهر يده على خده القريب منك.", "اثنِ الركبة البعيدة واسحبها لتدحرجه على جانبه.", "أمِل الرأس للخلف بلطف؛ وواصل مراقبة التنفس."], dont: ["إذا توقف عن التنفس الطبيعي، ابدأ الإنعاش القلبي."]},
+  {id: "poison", t: "التسمم أو الجرعة الزائدة", tag: "تسمم", urgent: true, kw: [], when: "ابتلاع أو استنشاق أو حقن مادة ضارة، أو لدغة.",
+   steps: ["اتصل بـ {AMB} أو توجّه إلى أقرب قسم طوارئ.", "اعرف ما الذي تناوله وكم ومتى؛ وخذ العبوة معك.", "فاقد الاستجابة ويتنفس: وضعية الإفاقة. لا يتنفس: الإنعاش القلبي.", "مواد كيميائية على الجلد أو العينين: اغسلها بكمية كبيرة من الماء الجاري."], dont: ["لا تجعله يتقيأ ولا تعطه شيئاً ليشربه إلا إذا قال الطبيب ذلك."]},
+  {id: "mind", t: "أزمة نفسية", tag: "أزمة", urgent: true, kw: [], when: "شخص يتحدث عن إنهاء حياته، أو لديه خطة، أو تعتقد أنه ليس بأمان.",
+   steps: ["إذا كان أي شخص في خطر مباشر، اتصل بـ {POL} أو {AMB1}.", "ابقَ معه أو تأكد من وجود من يبقى معه. أبعد أي شيء قد يؤذي به نفسه إن كان ذلك آمناً.", "استمع بهدوء. اسأله مباشرة عن شعوره — فذلك لا يزرع الفكرة في ذهنه.", "ساعده على التواصل مع {CRISIS}."], dont: ["لا تتركه وحده إذا كان معرّضاً للخطر.", "لا تعِده بإبقاء الأمر سراً."]},
+];
+// Arabic red-flag words, matched in any language mode
+const AID_KW_AR = {
+  cpr: ["لا يتنفس", "توقف القلب", "انهار", "لا يستجيب"], choke: ["اختناق", "يختنق", "غص"], heart: ["ألم في الصدر", "الم في الصدر", "نوبة قلبية", "ضيق في الصدر", "ألم في الذراع اليسرى"],
+  stroke: ["سكتة", "جلطة دماغية", "تدلي الوجه", "تلعثم", "ضعف في جانب"], bleed: ["نزيف", "ينزف بشدة", "جرح عميق", "طعنة"], heat: ["ضربة شمس", "ضربة حرارة", "إجهاد حراري"],
+  allergy: ["حساسية شديدة", "تورم الحلق", "تورم اللسان", "صدمة تحسسية"], recovery: ["فاقد الوعي", "فقد الوعي", "أغمي عليه", "اغمي عليه", "لا يستيقظ"], poison: ["تسمم", "جرعة زائدة", "مبيد حشري", "ابتلع دواء"],
+};
+
+Object.assign(I18N_AR, {
+  "My healthy habits": "عاداتي الصحية", "Pick up to 4 small daily habits. Sleep, water and steps tick themselves from your check-in.": "اختر حتى 4 عادات يومية صغيرة. النوم والماء والخطوات تُسجَّل تلقائياً من تسجيلك اليومي.",
+  "Choose habits": "اختيار العادات", "Sleep 7+ hours": "النوم 7 ساعات أو أكثر", "Drink 8 glasses of water": "شرب 8 أكواب ماء", "Walk 7,000 steps": "المشي 7,000 خطوة", "10-minute walk after a meal": "مشي 10 دقائق بعد الوجبة",
+  "Screens off 30 min before bed": "إطفاء الشاشات قبل النوم بـ30 دقيقة", "3 minutes of slow breathing": "3 دقائق من التنفس البطيء", "5 portions of fruit and vegetables": "5 حصص من الفواكه والخضروات", "No sugary drinks today": "بلا مشروبات سكرية اليوم",
+  "Auto": "تلقائي", "Done today": "تم اليوم", "Mark done": "تمّ", "{a} of 7 days": "{a} من 7 أيام", "This week: {p}% of habit goals met": "هذا الأسبوع: تحقق {p}% من أهداف العادات",
+  "No habits chosen yet. Pick a few small ones — they're the easiest way to stay well.": "لم تختر عادات بعد. اختر بعض العادات الصغيرة — فهي أسهل طريقة للحفاظ على عافيتك.",
+  "Choose up to 4 habits": "اختر حتى 4 عادات", "You can pick up to 4.": "يمكنك اختيار 4 كحد أقصى.", "Habit slipping: {h}": "عادة تتراجع: {h}",
+  "Done on {a} of the last 7 days, down from {b} the week before — and not in the last 3 days.": "تمّت في {a} من آخر 7 أيام، بعد {b} في الأسبوع السابق — ولم تتم في آخر 3 أيام.",
+  "Restart small: do it once today, at the same time as something you already do (like after lunch).": "ابدأ من جديد بخطوة صغيرة: نفّذها مرة اليوم في وقت تفعل فيه شيئاً معتاداً (مثل بعد الغداء).",
+  "On a roll: {h}": "أداء رائع: {h}", "Done on {a} of the last 7 days. Habits like this protect you when life gets busy.": "تمّت في {a} من آخر 7 أيام. عادات كهذه تحميك عندما تزدحم الحياة.",
+  "Build me a habit plan from my data": "ضع لي خطة عادات بناءً على بياناتي",
+  "Online demo — the coach runs privately on each person's own computer through Lemonade, so it can't run in this browser. Tap a starter to see a real answer recorded on our test laptop.": "عرض تجريبي عبر الإنترنت — يعمل المدرّب بشكل خاص على حاسوب كل شخص عبر Lemonade، لذا لا يمكن تشغيله في هذا المتصفح. اضغط على سؤال جاهز لترى إجابة حقيقية مسجّلة على حاسوبنا التجريبي.",
+  "Recorded answer from the local AI (Qwen3-4B on a 2018 laptop CPU)": "إجابة مسجّلة من الذكاء الاصطناعي المحلي (Qwen3-4B على معالج حاسوب محمول من 2018)",
+  "In this online demo, pick one of the starters above.": "في هذا العرض التجريبي عبر الإنترنت، اختر أحد الأسئلة الجاهزة أعلاه.",
+  "In this online demo the AI coach is off. Use the emergency numbers and first-aid steps above.": "في هذا العرض التجريبي المدرّب متوقف. استخدم أرقام الطوارئ وخطوات الإسعافات الأولية أعلاه.",
+  "Evaluation on simulated users": "التقييم على مستخدمين محاكَين", "Evaluation results will appear here.": "ستظهر نتائج التقييم هنا.",
+  "drifts caught within 3 days": "تغيّرات اكتُشفت خلال 3 أيام", "false alarms on stable users": "إنذارات خاطئة لدى المستخدمين المستقرين", "{n} days": "{n} أيام", "median time to first signal": "الوقت الوسيط حتى أول إشارة",
+  "emergency phrases caught (EN + AR)": "عبارات طوارئ اكتُشفت (عربي + إنجليزي)", "Days since change began": "الأيام منذ بدء التغيّر", "Adaptive thresholds (WellSense)": "حدود تكيّفية (WellSense)", "Fixed thresholds (baseline method)": "حدود ثابتة (طريقة مرجعية)",
+  "{n} simulated users ({d} with a gradual change in sleep, mood, stress, energy, activity or water; {s} stable). False alarms: adaptive {fa1} vs fixed {fa2}. Safety test: {p} emergency phrases and {q} everyday phrases; {spec} of everyday phrases correctly left alone. Synthetic data only — not a clinical validation.": "{n} مستخدماً محاكىً ({d} لديهم تغيّر تدريجي في النوم أو المزاج أو التوتر أو الطاقة أو النشاط أو الماء؛ و{s} مستقرون). الإنذارات الخاطئة: التكيّفي {fa1} مقابل الثابت {fa2}. اختبار السلامة: {p} عبارة طوارئ و{q} عبارة يومية؛ تُركت {spec} من العبارات اليومية دون تنبيه بشكل صحيح. بيانات اصطناعية فقط — ليس تحققاً سريرياً.",
+});
+
+</script>
+<script>
+const EVAL_RESULTS = {"adaptive": {"sens": {"1": 0.125, "2": 0.5, "3": 0.835, "4": 0.845, "5": 0.855}, "fa": 0.155, "median": 2, "caughtBy5": 0.985}, "fixed": {"sens": {"1": 0.15, "2": 0.585, "3": 0.89, "4": 0.885, "5": 0.91}, "fa": 0.22, "median": 2, "caughtBy5": 1}, "safety": {"pos": 32, "neg": 20, "sens": 1, "spec": 1, "missed": [], "wrong": []}, "n": 400, "nDrift": 200, "nStable": 200, "params": {"z": 0.8, "minf": 1.15, "persist": 0}};
+
+const DEMO_REPLIES = {
+ "Explain my early signals this week": {
+  "text": "Thanks for sharing — I see your WellSense data, and I’m here to help you understand what’s happening and take small, realistic steps forward.\n\n### Your Early Signals This Week (in simple terms):\n\nYou’ve noticed a pattern over the last few days — **sleep, stress, mood, energy, movement, and water intake are all slipping**. This is a clear early sign that your body and mind are under strain. It’s not a crisis yet, but it’s a warning: if these trends continue, they could lead to burnout or low mood.\n\nHere’s what’s happening:\n\n- 🔹 **Stress is rising** (from 2.2 to 4.3/5) — you’re feeling more pressure, maybe from deadlines or work.\n- 🔹 **You’re sleeping less** (down to 5.3h from 7.5h) — less sleep affects mood and energy.\n- 🔹 **Energy and mood are dropping** — you’re feeling tired and low, especially after the deadline week.\n- 🔹 **You’re moving less** (only 3,500 steps vs. 7,700) — physical activity helps your brain and body feel better.\n- 🔹 **Headaches and trouble focusing** have appeared — these are common signs of stress or fatigue.\n- 🔹 **You’re drinking less water** — dehydration can worsen headaches and mental fog.\n\nEven though your PHQ-2 and GAD-2 scores are still low (no major depression or anxiety), these small changes are important — they show your wellbeing is under pressure.\n\n---\n\n### ✅ 3 Small, Realistic Next Steps (Start Today):\n\n1. **Sleep better tonight**  \n   → Go to bed by 11:30 PM (even if you’re tired). Try to sleep 7 hours — just 1 extra hour of sleep can help your mood and energy.\n\n2. **Drink water first thing in the morning**  \n   → Drink 1 glass of water when you wake up. Then, aim for 1 glass every 2 hours (e.g., after meals, before bed). This helps with focus and reduces headaches.\n\n3. **Take a 10-minute walk after dinner**  \n   → Even if you’re tired, just walk for 10 minutes. It boosts energy and clears your mind. Do it now — it’s a tiny win.\n\n---\n\nYou’re not failing — you’re just going through a tough week. These small steps can help your body recover and feel better. If the headaches or low mood get worse, or if you feel overwhelmed, please reach out to **800-HOPE (800 4673)** or someone you trust.\n\nYou’ve got this — one step at a time. 💙",
+  "secs": 171
+ },
+ "Build me a habit plan from my data": {
+  "text": "Thanks for sharing — I see you’ve been carrying a lot lately. Your mood, energy, sleep, and movement have all dipped over the last few days, and the headaches are repeating. That’s a sign your body is asking for care. Let’s build a gentle, realistic habit plan to help you get back on track — one small step at a time.\n\n---\n\n### 🌱 Your 7-Day Habit Plan (Simple & Realistic)\n\n**Goal:** Restore balance — sleep, energy, mood, movement — without pressure.\n\n✅ **Sleep (7+ hours)**  \n- Start with: Go to bed by 11:30 PM (even if you’re tired).  \n- Try: Put your phone in another room 30 mins before bed.  \n- Track: Check in at 7:00 AM — just to notice how you wake up.\n\n✅ **Water (8 glasses)**  \n- Pick 1 small win: Drink 1 glass *after* your first meal.  \n- Then: Add 1 more at bedtime.  \n- Track: Check in at 10:00 PM — just to see if you’re drinking.\n\n✅ **Movement (Daily walk)**  \n- Start with: 5 minutes of walking after lunch.  \n- If you can’t walk, just stand up and stretch for 5 mins.  \n- Goal: Do this 3 days this week — no pressure.\n\n✅ **Mood check-in**  \n- Every morning: Say aloud: “How am I feeling today?” (1–5 scale).  \n- Keep it simple: “I feel tired,” or “I feel okay.” That’s enough.\n\n✅ **Headache care**  \n- If you feel a headache coming: Stop screens, drink water, sit in a quiet place.  \n- Try: 10 mins of deep breathing (inhale 4 sec, hold 4 sec, exhale 6 sec).  \n\n---\n\n💡 *Why this works:*  \nYou’re not trying to fix everything at once. Small wins build confidence. This plan fits your life — especially with a deadline week. You’re already doing better than you think.\n\n💬 **Next step:**  \nPick **one** of these to start today:  \n👉 5-minute walk after lunch  \n👉 Drink 1 glass of water after your first meal  \n👉 Say your morning mood out loud  \n\nJust one. Then we’ll check in again in 3 days.  \n\nYou’ve got this — and I’m here to support you. 💙",
+  "secs": 108
+ },
+ "Make me a simple 7-day plan to sleep better": {
+  "text": "You're doing great just noticing these changes — it shows self-awareness, which is the first step to feeling better.  \n\nHere’s a simple, realistic 7-day plan to help you sleep better — based on your habits and signals. It’s small, gentle, and fits into your routine.\n\n✅ **Sleep Better in 7 Days**  \n- **Every night**: Go to bed by 11:00 PM (even if you're tired). This helps your body wind down.  \n- **Before bed**: Turn off screens 30 minutes early (no phones, TV, or social media).  \n- **Evening routine**: Take a 10-minute walk after dinner (if you can), or just sit quietly with a warm drink.  \n- **No caffeine after 2:00 PM** — avoid tea, coffee, or energy drinks.  \n- **One night a week**: Try a 10-minute breathing exercise before bed (just 4 seconds in, 4 seconds out — repeat 5 times).  \n\nThis plan is small, realistic, and builds on what you’ve already been doing. You don’t need to change everything — just one small step each day.  \n\nYou’ve got this. Let me know how it goes after 3 days — I’ll help adjust. 💤✨",
+  "secs": 49
+ },
+ "Quick ways to lower stress at work": {
+  "text": "You're doing great just noticing this — it shows self-awareness, which is a strong sign of wellbeing.  \n\nHere are 3 quick, realistic steps to lower stress at work right now:  \n\n- **Take a 3-minute pause every hour**: Stand up, stretch, or just breathe deeply. Even 30 seconds helps reset your nervous system.  \n- **Use a 10-minute walk after work** (even if just outside your office): It helps your mind clear and reduces stress hormones.  \n- **Set one small boundary**: For example, stop checking emails after 6 PM. This protects your sleep and energy.  \n\nYou’ve already noticed the pattern — small changes now build stronger resilience. Keep going. 💙",
+  "secs": 28
+ },
+ "How do I stay well in very hot weather?": {
+  "text": "You're doing really well by checking in — that’s a strong sign of self-care. In hot weather, your body works harder, which can affect mood, energy, and sleep. Here’s how to stay well, especially with what you're already going through:\n\n- **Stay hydrated**: Drink water regularly — even if you don’t feel thirsty. Aim for 8 glasses daily. If you’re drinking less (like 4 glasses), try sipping small amounts every 30 minutes.  \n- **Cool down during the day**: Try a 10-minute walk in the early morning or evening. Even a short break in shade helps your body recover.  \n- **Avoid long screen time in the heat**: Turn off devices 30 minutes before bed. Heat makes it harder to sleep, and less sleep is already affecting your mood and energy.  \n- **Check your BP and headaches**: You’ve had headaches for 3 days. If they get worse or you feel dizzy, call 998 — high BP or heat stress can be serious.  \n\nYou’re already noticing changes — that’s powerful. Keep checking in, and take one small step today. For example: drink one glass of water now, then walk for 10 minutes after dinner.  \n\nYou’ve got this. 💙",
+  "secs": 60
+ },
+ "I feel low lately. What small steps can help?": {
+  "text": "I hear you — it’s completely okay to feel low, especially when things are getting busy or stressful. You’re doing a great job noticing it early, which is already a strong step toward feeling better.\n\nHere are 3 small, realistic steps you can take today:\n\n- 🌙 **Sleep gently**: Try to go to bed by 11 PM and get up at the same time every morning. Aim for about 7 hours and keep the times consistent.  \n- 💧 **Drink one glass of water now** — then another after 30 minutes. This helps your body feel more grounded and can ease headaches.  \n- 🚶‍♂️ **Take a 5-minute walk after your next meal** — even just outside your home or in a quiet corner. It helps your mind reset and your body feel lighter.\n\nYou don’t have to fix everything at once. Just start with one of these today — and I’ll check in again in a few days. You’ve got this. 💙",
+  "secs": 46
+ },
+ "اشرح لي إشاراتي المبكرة هذا الأسبوع": {
+  "text": "أهلاً بك، أشعر بالقلق من تغيراتك في الصحة النفسية والجسدية هذا الأسبوع — هذا أمر طبيعي، ولا يعني أنك تُعاني من مشكلة خطيرة. لكن التغيرات التي لاحظتها في بياناتك تُظهر أن جسمك وعقلك يُرسلون إشارات مبكرة، وتُشير إلى أنك قد تُعاني من تراكم للجهد.\n\nإليك تلخيصًا بسيطًا وواضحًا لـ **الإشارات المبكرة** التي شاهدتُها:\n\n- 🔻 **النوم أقل من المعتاد**: نمت 5.3 ساعة في الأيام الثلاثة الأخيرة، مقارنة بـ 7.5 ساعة عادةً. النوم القصير يُضعف التركيز، ويؤثر على المزاج.\n- 🔻 **التوتر والقلق يرتفعان**: تراكم التوتر من 2.2 إلى 4.3 على مقياس 5، وهو تغيير كبير. هذا يُسبب توترًا عصبيًا، وربما أعراض مثل القلب السريع أو الاضطرابات العصبية.\n- 🔻 **الطاقة تُنخفض**: من 3.8 إلى 2.0 على المقياس، أي أنك تشعر بالتعب، وهذا يُفسّر التراجع في الحركة والتركيز.\n- 🔻 **الحالة المزاجية تُصبح سلبية**: من \"ممتاز\" إلى \"منخفض\"، مع وجود أعراض مثل الصداع وصعوبة التركيز.\n- 🔻 **الحركة تقل بشكل كبير**: تراجعت خطواتك بنسبة 54%، وهذا يُشير إلى أنك تُنام من النشاط اليومي.\n- ⚠️ **الصداع يظهر 3 أيام متتالية** — هذا يُعتبر إشارة مُكررة، ويُمكن أن يكون نتيجة للإجهاد أو نقص النوم أو التوتر العصبي.\n\n💡 **ملاحظة مهمة**:  \nالبيانات تُظهر أنك تُعاني من تراكم للإجهاد، وقد تكون في بداية **الإرهاق العصبي أو التعب المزمن**. هذا لا يعني أنك مريض، لكنه يُشير إلى أنك بحاجة إلى تدخل بسيط الآن لتفادي تفاقم الحالة.\n\n---\n\n### ✅ ماذا يمكنك فعله الآن؟ (خطوات بسيطة، وقابلة للتطبيق)\n\n1. **نام 7 ساعات على الأقل اليومين التاليين** — ابدأ بساعة إضافية قبل النوم، وانسَ التلفاز أو الهاتف 30 دقيقة قبل النوم.\n2. **أعد تناول 8 أكواب ماء على الأقل في اليوم** — ابدأ بساعة واحدة من اليوم (مثلاً بعد الفطور)، وابقَ على مراقبة كمية الماء.\n3. **أذهب لمشي قصير (10 دقائق) بعد وجبة العشاء** — حتى لو كان في المبنى، يُساعد على تقليل التوتر.\n4. **أعد تقييم حالتك اليومية بساعتين فقط** — اكتب: \"ما الذي أشعر به الآن؟ ما الذي أحتاجه؟\" — هذا يُساعد على التعرف على ما يُشعرك بالراحة.\n5. **أبلغ عن أي تغيير في الصداع أو التعب** — إذا استمر أكثر من 3 أيام، يُفضل أن تُراجع طبيبًا للتأكد من عدم وجود مشاكل جسدية.",
+  "secs": 179
+ },
+ "ضع لي خطة عادات بناءً على بياناتي": {
+  "text": "أهلاً بك، أشكرك على مشاركتك البيانات — أرى أنك تُعاني من ارتفاع في التوتر، نقص في النوم، وانخفاض في الطاقة والهوية، خصوصًا في الأيام الأخيرة. هذه الأعراض تشير إلى تراكم مُبكر للإجهاد، وقد تكون علامة على تعب مزمن أو احتمال تدهور في الحالة النفسية.\n\nسأُقدّم لك خطة عادات **مُستندة إلى بياناتك**، بسيطة، وقابلة للتطبيق الآن، مع تركيز على التغييرات الصغيرة التي تُحدث فرقًا كبيرًا.\n\n---\n\n### ✅ خطة عادات (أسبوعية مُبسطة)\n\n- **أولًا: ابدأ بـ 10 دقائق من المشي بعد العشاء**  \n  (أو بعد وجبة الغداء) — حتى لو لم تُكملها كل يوم، ابدأ بـ 3 دقائق اليوم، ثم ازداد ببطء. هذا يُحسّن النوم والطاقة.\n\n- **ثانيًا: نوم 7 ساعات على الأقل (أو 7.5 ساعات)**  \n  ابدأ بـ 7 ساعات يوميًا، ونُقيّم نومك في اليوم التالي. اجعل من المهم أن تُنهي الشاشات 30 دقيقة قبل النوم.\n\n- **ثالثًا: اشرب 4 أكواب ماء على الأقل في اليوم**  \n  لا تنتظر 8 أكواب. ابدأ بـ 4 أكواب — وانظر كيف تشعر بعد 3 ساعات من التناول. إذا شعرت بالكثير من التعب، فهذا يُشير إلى نقص في السوائل.\n\n- **رابعًا: اُسجّل تغييراتك كل يوم (ملاحظة بسيطة)**  \n  مثل: \"أنا نمت 7 ساعات\"، أو \"أنا مشيت 10 دقائق\"، أو \"أنا أشعر بالهدوء\". هذا يُساعدك على رؤية التقدّم.\n\n- **خامسًا: اطلب دعمًا إذا شعرت أنك \"لا تقدر على التحمل\"**  \n  إذا استمرت الأعراض (الإرهاق، الصداع، صعوبة التركيز) لأكثر من 3 أيام، فاتصل بـ **800-HOPE (800 4673)** أو اطلب من شخص موثوق أن يُراقب حالتك.\n\n---\n\n💡 نصيحة: لا تُهمل الصداع. قد يكون علامة على نقص في النوم أو توتر مزمن. اشرب ماء، وامضي 5 دقائق من الهدوء (مثل التنفس العميق).\n\nأنا هنا لمساعدتك على التقدّم بخطوة صغيرة كل يوم. هل ترغب أن نُحدّث هذه الخطة كل أسبوع؟",
+  "secs": 110
+ },
+ "ضع لي خطة بسيطة لمدة 7 أيام لنوم أفضل": {
+  "text": "أهلاً بك، يُسعدني مساعدتك في تحسين نومك.\n\nالبيانات تُظهر أنك تُنام أقل من المعتاد، وتشعر بضغط وتعب، وهذا يُعزز من صعوبة النوم. إليك خطة بسيطة وواقعية لمدة 7 أيام، تبدأ من اليوم:\n\n---\n\n✅ **الهدف**: النوم 7.5 ساعة على الأقل، ونوم مريح دون توتر.\n\n### 📅 خطة نوم بسيطة (7 أيام):\n\n**الساعة 22:30 – 23:00**:  \n- اجعل وقت النوم مبكرًا بـ 30 دقيقة مبكرًا عن المعتاد.  \n- لا تُستخدم الشاشات (الهاتف، الكمبيوتر) بعد 90 دقيقة من النوم.\n\n**الساعة 21:00 – 21:30**:  \n- افعل 10 دقائق من \"المشي بعد الوجبة\" أو تمارين بسيطة (مثل تمارين التنفس أو تدريب العضلات).  \n- هذا يُقلل التوتر ويُساعد على الاستعداد للنوم.\n\n**الساعة 20:30 – 21:00**:  \n- اشرب كوبًا من الماء، وتجنب الشاي أو الكافيين بعد الساعة 15:00.\n\n**الساعة 23:00 – 06:00**:  \n- لا تُفتح الشاشات، ولا تُقرأ أو تُلعب ألعاب.  \n- استخدم وقت النوم للاسترخاء (مثل تمارين التنفس أو مراجعة ملاحظاتك).\n\n**الساعة 07:00 – 08:00**:  \n- ابدأ يومك بمشي قصير (5 دقائق) أو تمارين بسيطة، لتحسين طاقة النهار.\n\n---\n\n💡 **نصيحة إضافية**:  \nإذا شعرت بصداع أو صعوبة في التركيز، فهذا قد يكون علامة على نقص النوم. احرص على النوم في نفس الوقت كل ليلة.\n\nإذا لم تُشعر بالتحسن بعد 3 أيام، يُفضل أن تُتحدث مع مختص صحي أو مُدرب على الصحة النفسية.\n\nأنا هنا لمساعدتك كل يوم. 💙",
+  "secs": 102
+ }
+};
+
+</script>
+<script>
+"use strict";
+Object.assign(I18N_AR, {"Online demo": "عرض تجريبي"});
+/* WellSense — Future Health Digital Innovation Challenge 2026, Wellbeing track.
+   Sense (check-ins) → Predict (personal-baseline signals) → Support (private AI coach + safety).
+   English + Arabic (RTL). Regions: Pakistan, UAE. All data stays on this device; AI runs locally via Lemonade. */
+
+const HOSTED = !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const API = "http://localhost:13305/api/v1";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+async function api(path, opts = {}) {
+  if (HOSTED) throw new Error("offline demo");
+  const r = await fetch(API + path, opts);
+  if (!r.ok) { let m = r.status + " " + r.statusText; try { const j = await r.json(); m = j.error?.message || j.error || m; } catch {} throw new Error(typeof m === "string" ? m : JSON.stringify(m)); }
+  return r;
+}
+const getJSON = p => api(p).then(r => r.json());
+const postJSON = (p, b) => api(p, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(b)});
+
+/* ---------- storage ---------- */
+const KEY = "lp.health.v1";
+const HD = Object.assign({log: {}, card: {}, screens: [], goals: {water: 8, steps: 7000}, region: "pk"}, (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } })());
+HD.goals = Object.assign({water: 8, steps: 7000}, HD.goals); HD.screens ||= []; HD.region ||= "pk";
+function save() { try { localStorage.setItem(KEY, JSON.stringify(HD)); } catch { toast(t("Couldn't save — browser storage is unavailable."), true); } }
+const dkey = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; };
+const today = () => dkey(new Date());
+const ago = n => { const x = new Date(); x.setDate(x.getDate() - n); return dkey(x); };
+const lastDays = n => Array.from({length: n}, (_, i) => ago(n - 1 - i));
+const day = k => HD.log[k] || (HD.log[k] = {});
+const filled = e => e && Object.entries(e).some(([k, v]) => k[0] !== "_" && v != null && v !== "" && !(Array.isArray(v) && !v.length));
+const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+
+/* ---------- language ---------- */
+let LANG = (() => { try { return localStorage.getItem("ws.lang") || "en"; } catch { return "en"; } })();
+const AR_ = () => LANG === "ar";
+function t(s, p = {}) { let out = AR_() ? (I18N_AR[s] ?? s) : s; return out.replace(/\{(\w+)\}/g, (m, k) => p[k] ?? m); }
+const fmtDate = (d, o) => new Date(d).toLocaleDateString(AR_() ? "ar-AE-u-nu-latn" : undefined, o);
+const listJoin = a => a.join(AR_() ? "، " : ", ");
+// static HTML: remember original English text and attributes once, then swap
+const STATIC = [];
+function captureStatic() {
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {acceptNode: n => n.nodeValue.trim() && !n.parentElement.closest("script,style,[data-dyn]") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT});
+  for (let n; (n = w.nextNode());) STATIC.push({n, v: n.nodeValue});
+  document.querySelectorAll("[placeholder],[aria-label],[title]").forEach(el => { if (el.closest("[data-dyn]")) return; for (const a of ["placeholder", "aria-label", "title"]) if (el.hasAttribute(a)) STATIC.push({el, a, v: el.getAttribute(a)}); });
+}
+function applyStatic() {
+  for (const s of STATIC) {
+    if (s.n) { const m = s.v.match(/^(\s*)([\s\S]*?)(\s*)$/); s.n.nodeValue = m[1] + t(m[2]) + m[3]; }
+    else s.el.setAttribute(s.a, t(s.v));
+  }
+}
+function setLang(l) {
+  LANG = l; try { localStorage.setItem("ws.lang", l); } catch {}
+  document.documentElement.lang = l === "ar" ? "ar" : "en"; document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+  applyStatic(); $("#langBtn").textContent = l === "ar" ? "English" : "عربي";
+  document.title = t("WellSense — early wellbeing signals"); renderSos(); refreshPage();
+}
+
+/* ---------- region ---------- */
+const REGIONS = {
+  pk: {name: "Pakistan", amb: "1122", amb2: "115", pol: "15", fire: "16", ambText: {en: "1122 or 115", ar: "1122 أو 115"},
+       crisis: {name: {en: "Umang", ar: "أومنغ (Umang)"}, num: "0311-7786264", tel: "03117786264", note: {en: "free, 24/7 (number as widely published; confirm at umang.com.pk)", ar: "مجاني، على مدار الساعة (الرقم كما هو منشور على نطاق واسع؛ تأكّد منه على umang.com.pk)"}},
+       numbers: [["1122", "Rescue 1122", "Ambulance, fire and rescue", 1], ["115", "Edhi Ambulance", "Ambulance, nationwide", 1], ["15", "Police", "Crime, threats, danger"], ["16", "Fire Brigade", "Fire"], ["1020", "Chhipa Ambulance", "Ambulance, mainly Karachi"], ["130", "Motorway Police", "Motorway and highway accidents"]],
+       services: [["0311-7786264", "Umang", "Free 24/7 mental health helpline (confirm at umang.com.pk)", "03117786264"], ["0800-77767", "National Poison Control Centre, JPMC Karachi", "Toll-free; opened 2012 — may not answer 24/7", "080077767"]],
+       poison: {en: "National Poison Control Centre, JPMC Karachi: 0800-77767 (opened 2012; may not answer 24/7 — call 1122 first if serious).", ar: "المركز الوطني لمكافحة السموم، مستشفى JPMC كراتشي: 0800-77767 (افتُتح عام 2012؛ قد لا يرد على مدار الساعة — اتصل بـ 1122 أولاً إذا كانت الحالة خطيرة)."}},
+  ae: {name: "UAE", amb: "998", amb2: null, pol: "999", fire: "997", ambText: {en: "998", ar: "998"},
+       crisis: {name: {en: "800-HOPE (National Mental Support Line)", ar: "800-HOPE (خط الدعم النفسي الوطني)"}, num: "800 4673", tel: "8004673", note: {en: "free, call or WhatsApp, Arabic and English — check current hours", ar: "مجاني، اتصال أو واتساب، بالعربية والإنجليزية — تحقّق من ساعات العمل الحالية"}},
+       numbers: [["998", "Ambulance", "Medical emergencies, anywhere in the UAE", 1], ["999", "Police", "Police emergencies", 1], ["997", "Civil Defence", "Fire and rescue"], ["996", "Coastguard", "Sea emergencies"], ["995", "Search and Rescue", "Search and rescue"]],
+       services: [["800 4673", "800-HOPE", "National Mental Support Line — call or WhatsApp, Arabic and English", "8004673"], ["800 506", "Itma'en (Dubai)", "Dubai mental health support line", "800506"], ["800 342", "Dubai Health Authority (800 DHA)", "24/7 health services and advice line", "800342"], ["800 424", "Poison and Drug Information Service (DoH Abu Dhabi)", "Weekdays 7am–11pm", "800424"]],
+       poison: {en: "Poison and Drug Information Service (Department of Health – Abu Dhabi): 800 424, weekdays 7am–11pm. If serious, call 998.", ar: "خدمة معلومات السموم والأدوية (دائرة الصحة – أبوظبي): 800 424، أيام العمل من 7 صباحاً حتى 11 مساءً. إذا كانت الحالة خطيرة اتصل بـ 998."}},
+};
+const R = () => REGIONS[HD.region] || REGIONS.pk;
+const L = o => o[AR_() ? "ar" : "en"];
+function fill(s) { const r = R(); return s.replaceAll("{AMB}", `<b>${L(r.ambText)}</b>`).replaceAll("{AMB1}", `<b>${r.amb}</b>`).replaceAll("{POL}", `<b>${r.pol}</b>`).replaceAll("{CRISIS}", `<b>${esc(L(r.crisis.name))}</b> — ${r.crisis.num}`); }
+function renderSos() {
+  const r = R(), parts = [[r.amb, t("Ambulance")], ...(r.amb2 ? [[r.amb2, "Edhi"]] : []), [r.pol, t("Police")], [r.fire, t("Fire")]];
+  $("#sosBar").innerHTML = `<div class="sos-t"><b>${t(HD.region === "ae" ? "Emergency in the UAE?" : "Emergency in Pakistan?")}</b><span>${t("Call now — don't wait.")}</span></div>` + parts.map(([n, l], i) => `<a class="sos-n ${i >= (r.amb2 ? 2 : 1) ? "alt" : ""}" href="tel:${n}"><span class="mono">${n}</span>${esc(l)}</a>`).join("");
+}
+
+/* ---------- UI helpers ---------- */
+function toast(msg, bad) { const el = document.createElement("div"); el.className = "toast" + (bad ? " bad" : ""); el.textContent = msg; $("#toasts").append(el); setTimeout(() => el.remove(), bad ? 7000 : 4000); }
+function modal(title, bodyHTML, {yes = t("Confirm"), no = t("Cancel"), onOpen} = {}) {
+  return new Promise(res => {
+    $("#modalTitle").textContent = title; $("#modalBody").innerHTML = bodyHTML; $("#modalYes").textContent = yes; $("#modalNo").textContent = no || ""; $("#modalNo").hidden = !no;
+    const m = $("#modal"); m.hidden = false; onOpen?.($("#modalBody"));
+    const done = v => { m.hidden = true; document.removeEventListener("keydown", key); res(v); };
+    const key = e => { if (e.key === "Escape") done(false); };
+    document.addEventListener("keydown", key);
+    $("#modalYes").onclick = () => done(true); $("#modalNo").onclick = () => done(false);
+  });
+}
+
+/* ---------- Lemonade status ---------- */
+const S = {models: [], loaded: [], online: false, info: null, health: null};
+async function refreshStatus() {
+  try { const h = await getJSON("/health"); S.health = h; S.loaded = h.all_models_loaded || []; S.online = true; $("#status").className = "status ok"; $("#statusText").textContent = t("Private AI on"); }
+  catch { S.online = false; S.loaded = []; $("#status").className = HOSTED ? "status ok" : "status down"; $("#statusText").textContent = t(HOSTED ? "Online demo" : "AI engine offline"); }
+}
+async function refreshModels() { try { S.models = (await getJSON("/models?show_all=true")).data || []; } catch { S.models = []; } }
+async function refreshInfo() { try { S.info = await getJSON("/system-info"); } catch {} }
+
+/* ---------- icons & art ---------- */
+const IC = {
+  mood: '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>', energy: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  stress: '<path d="M3 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"/>', sleep: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  water: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+  steps: '<path d="M7 4c1.7 0 2.6 1.8 2.6 4.3S8.7 12.5 7 12.5 4.4 10.8 4.4 8.3 5.3 4 7 4zM5 14.5h4v1.8a2 2 0 0 1-4 0zM16.5 7.5c1.7 0 2.6 1.8 2.6 4.3s-.9 4.2-2.6 4.2-2.6-1.7-2.6-4.2.9-4.3 2.6-4.3zM14.5 18h4v.8a2 2 0 0 1-4 0z"/>',
+  bp: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M7 11h3l1-2 2 4 1-2h3"/>', note: '<path d="M5 4h10l4 4v12H5z"/><path d="M9 12h6M9 16h4"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>', moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>', check: '<path d="m5 12 4 4 10-10"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  trend: '<path d="m3 7 6 6 4-4 8 8"/><path d="M15 17h6v-6"/>', heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  brain: '<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V5a3 3 0 0 0-3-1zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+};
+const icon = (k, s = 20) => `<svg class="ico" viewBox="0 0 24 24" style="width:${s}px;height:${s}px" aria-hidden="true">${IC[k] || IC.info}</svg>`;
+const TINT = {mood: ["#FEF3C7", "#B45309"], energy: ["#FFEDD5", "#C2410C"], stress: ["#FCE7F3", "#BE185D"], sleep: ["#EDE9FE", "#6D28D9"], water: ["#DBEAFE", "#1D4ED8"], steps: ["#DCFCE7", "#15803D"], bp: ["#FFE4E6", "#BE123C"], note: ["#E0F2FE", "#0369A1"]};
+const bub = k => { const dark = document.documentElement.dataset.theme === "dark", [bg, fg] = TINT[k]; return `<span class="bub" style="background:${dark ? fg + "33" : bg};color:${dark ? bg : fg}">${icon(k, 19)}</span>`; };
+const FACE_COL = ["#EF4444", "#F97316", "#EAB308", "#84CC16", "#22C55E"];
+function faceSvg(level, col) {
+  const mouth = ["M8 16.5q4-4 8 0", "M8.5 16q3.5-2 7 0", "M8.5 15.5h7", "M8.5 14.5q3.5 2.5 7 0", "M7.5 14q4.5 4.5 9 0"][level - 1];
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10" fill="${col}22"/>${level === 1 ? '<path d="M7.5 8.5l2.5 1M16.5 8.5l-2.5 1"/>' : ""}<circle cx="9" cy="10.5" r="1.1" fill="${col}" stroke="none"/><circle cx="15" cy="10.5" r="1.1" fill="${col}" stroke="none"/><path d="${mouth}"/></svg>`;
+}
+const glassSvg = full => `<svg viewBox="0 0 24 30"><path d="M4 3h16l-2 23a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z" fill="${full ? "#BFDBFE" : "none"}" stroke="${full ? "#2563EB" : "var(--border2)"}" stroke-width="1.8" stroke-linejoin="round"/>${full ? '<path d="M5.2 10h13.6l-1.4 16a1.5 1.5 0 0 1-1.5 1.3H8.1a1.5 1.5 0 0 1-1.5-1.3z" fill="#60A5FA"/>' : ""}</svg>`;
+function greetArt(h) {
+  if (h >= 18 || h < 5) return `<svg viewBox="0 0 260 260"><defs><radialGradient id="mg" cx=".4" cy=".4"><stop offset="0" stop-color="#FEF9C3"/><stop offset="1" stop-color="#FDE68A"/></radialGradient></defs><circle cx="150" cy="120" r="60" fill="url(#mg)"/><g fill="#FDE68A"><circle cx="60" cy="70" r="3"/><circle cx="90" cy="40" r="2"/><circle cx="220" cy="200" r="2.5"/><circle cx="70" cy="190" r="2"/></g></svg>`;
+  return `<svg viewBox="0 0 260 260"><defs><radialGradient id="sg"><stop offset="0" stop-color="#FDE68A"/><stop offset="1" stop-color="#FBBF24"/></radialGradient></defs><g stroke="#FBBF24" stroke-width="6" stroke-linecap="round" opacity=".55">${Array.from({length: 12}, (_, i) => { const a = i * Math.PI / 6; return `<line x1="${150 + Math.cos(a) * 78}" y1="${120 + Math.sin(a) * 78}" x2="${150 + Math.cos(a) * 98}" y2="${120 + Math.sin(a) * 98}"/>`; }).join("")}</g><circle cx="150" cy="120" r="58" fill="url(#sg)"/><path d="M40 230c30-40 70-40 100 0" fill="#86EFAC" opacity=".7"/><path d="M110 240c30-30 70-30 110 0" fill="#34D399" opacity=".6"/></svg>`;
+}
+function confetti() {
+  const box = document.createElement("div"); box.className = "confetti"; const cols = ["#14B8A6", "#F59E0B", "#F472B6", "#60A5FA", "#22C55E", "#A78BFA"];
+  box.innerHTML = Array.from({length: 70}, () => `<i style="left:${Math.random() * 100}%;background:${cols[Math.floor(Math.random() * cols.length)]};animation-delay:${Math.random() * .5}s;animation-duration:${1.4 + Math.random() * 1.2}s"></i>`).join("");
+  document.body.append(box); setTimeout(() => box.remove(), 3200);
+}
+
+/* ================= SENSE: check-in ================= */
+const SCALES = {
+  mood: {label: "Mood", opts: ["Very low", "Low", "Okay", "Good", "Great"], q: "How do you feel?"},
+  energy: {label: "Energy", opts: ["Drained", "Low", "Okay", "Good", "High"], q: "How's your energy?"},
+  stress: {label: "Stress", opts: ["Calm", "Mild", "Some", "High", "Very high"], q: "How stressed are you?"},
+};
+const SYMPTOMS = ["Headache", "Poor appetite", "Anxious", "Irritable", "Body aches", "Trouble focusing", "Lonely", "Tired all day"];
+const CORE = ["mood", "energy", "stress", "sleep", "water", "steps"];
+function renderToday() {
+  const h = new Date().getHours(), d = day(today()), g = HD.goals;
+  $("#greet").textContent = t(h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening") + (HD.card.name ? (AR_() ? "، " : ", ") + HD.card.name.split(" ")[0] : "") + " 👋";
+  $("#todayDate").textContent = fmtDate(new Date(), {weekday: "long", day: "numeric", month: "long"});
+  $("#greetArt").innerHTML = greetArt(h);
+  const doneN = CORE.filter(k => k === "water" ? d.water > 0 : d[k] != null).length;
+  $("#progFill").style.width = (doneN / CORE.length * 100) + "%";
+  $("#progText").textContent = doneN === CORE.length ? t("Check-in complete — nice work! 🎉") : t("{n} of {m} done", {n: doneN, m: CORE.length});
+  const scale = k => { const inv = k === "stress";
+    return `<div class="trk ${d[k] ? "done" : ""}"><div class="trk-h"><span class="lab">${bub(k)}${t(SCALES[k].q)}</span><b>${d[k] ? t(SCALES[k].opts[d[k] - 1]) : ""}</b></div>
+      <div class="faces" role="radiogroup" aria-label="${t(SCALES[k].label)}">${SCALES[k].opts.map((o, i) => { const lvl = inv ? 5 - i : i + 1, col = FACE_COL[lvl - 1]; return `<button type="button" role="radio" aria-checked="${d[k] === i + 1}" class="face ${d[k] === i + 1 ? "on" : ""}" style="color:${col}" data-scale="${k}:${i + 1}" title="${t(o)}" aria-label="${t(o)}">${faceSvg(lvl, col)}</button>`; }).join("")}</div>
+      <div class="scale-l"><span>${t(SCALES[k].opts[0])}</span><span>${t(SCALES[k].opts[4])}</span></div></div>`; };
+  const bp = (s, di) => !s || !di ? "" : (s >= 180 || di >= 120) ? `<div class="flag bad">${t("Very high ({v}). With chest pain, breathlessness, weakness or vision changes, call {amb} now. Otherwise re-check in 5 minutes and contact a doctor today.", {v: s + "/" + di, amb: R().amb})}</div>` : (s >= 140 || di >= 90) ? `<div class="flag warn">${t("Above the usual target (under 140/90). If it stays high, see a doctor.")}</div>` : (s < 90 || di < 60) ? `<div class="flag warn">${t("Low. If dizzy or faint, sit or lie down and seek advice.")}</div>` : `<div class="flag ok">✓ ${t("In the normal range.")}</div>`;
+  const sl = d.sleep;
+  $("#checkin").innerHTML = scale("mood") + scale("energy") + scale("stress") + `
+    <div class="trk ${sl != null ? "done" : ""}"><div class="trk-h"><span class="lab">${bub("sleep")}${t("How long did you sleep?")}</span><b class="mono" style="color:var(--text);font-size:18px">${t("{v} h", {v: sl ?? "–"})}</b></div><input type="range" min="0" max="12" step="0.5" value="${sl ?? 7}" data-set="sleep" aria-label="${t("Hours of sleep")}"><div class="scale-l"><span>${t("{v} h", {v: 0})}</span><span>${sl == null ? t("Slide to set") : sl >= 7 && sl <= 9 ? "😴 " + t("Great amount") : sl < 7 ? t("A bit short") : t("Plenty")}</span><span>${t("{v} h", {v: 12})}</span></div></div>
+    <div class="trk ${d.water ? "done" : ""}"><div class="trk-h"><span class="lab">${bub("water")}${t("Water today")}</span><b class="mono" style="color:var(--text)">${d.water || 0}/${g.water}</b></div><div class="glasses" role="group" aria-label="${t("Glasses of water")}">${Array.from({length: Math.max(g.water, d.water || 0)}, (_, i) => `<button type="button" class="glass" data-glass="${i + 1}" aria-label="${t("{n} glasses", {n: i + 1})}">${glassSvg(i < (d.water || 0))}</button>`).join("")}</div><div class="scale-l"><span>${t("Tap a glass to fill up to it")}</span><span>${(d.water || 0) >= g.water ? "💧 " + t("Goal reached!") : ""}</span></div></div>
+    <div class="trk ${d.steps != null ? "done" : ""}"><div class="trk-h"><span class="lab">${bub("steps")}${t("Steps today")}</span><b class="mono" style="color:var(--text)">${(d.steps || 0).toLocaleString()}</b></div><div class="bar"><div class="bar-fill" style="width:${Math.min(100, (d.steps || 0) / g.steps * 100)}%"></div></div><div class="acts"><input type="number" min="0" step="100" value="${d.steps ?? ""}" placeholder="${t("Type steps")}" data-set="steps" class="inp" style="flex:1" aria-label="${t("Steps today")}"><button class="btn-ghost sm" type="button" data-addsteps="1000">+1k</button></div><div class="scale-l"><span>${t("Goal {n}", {n: g.steps.toLocaleString()})}</span><span>${(d.steps || 0) >= g.steps ? "🎯 " + t("Goal reached!") : ""}</span></div></div>
+    <div class="trk ${d.sys ? "done" : ""}"><div class="trk-h"><span class="lab">${bub("bp")}${t("Blood pressure")} <span class="muted small" style="font-weight:500">${t("optional")}</span></span><b class="mono" style="color:var(--text)">${d.sys ? d.sys + "/" + (d.dia ?? "–") : ""}</b></div><div class="acts"><input type="number" min="50" max="260" value="${d.sys ?? ""}" placeholder="${t("Top")}" data-set="sys" class="inp half" aria-label="${t("Systolic, top number")}"><span class="muted">/</span><input type="number" min="30" max="160" value="${d.dia ?? ""}" placeholder="${t("Bottom")}" data-set="dia" class="inp half" aria-label="${t("Diastolic, bottom number")}"></div>${bp(d.sys, d.dia)}</div>
+    <div class="trk wide"><div class="trk-h"><span class="lab">${bub("note")}${t("Anything bothering you today?")}</span></div><div class="tags">${SYMPTOMS.map(s => `<button type="button" class="tagb ${(d.sym || []).includes(s) ? "on" : ""}" data-sym="${s}" aria-pressed="${(d.sym || []).includes(s)}">${t(s)}</button>`).join("")}</div><textarea class="inp" rows="2" data-set="note" placeholder="${t("Notes (optional) — e.g. busy week, exams, travelling")}">${esc(d.note || "")}</textarea></div>`;
+  const C = $("#checkin"), after = () => { save(); const was = d._celebrated; renderToday(); if (!was && CORE.every(k => k === "water" ? d.water > 0 : d[k] != null)) { d._celebrated = 1; save(); confetti(); toast(t("Check-in complete — see you tomorrow! 🌿")); } };
+  C.querySelectorAll("[data-scale]").forEach(b => b.onclick = () => { const [k, v] = b.dataset.scale.split(":"); d[k] = +v; after(); });
+  C.querySelectorAll("[data-glass]").forEach(b => b.onclick = () => { const n = +b.dataset.glass; d.water = d.water === n ? n - 1 : n; after(); });
+  C.querySelectorAll("[data-addsteps]").forEach(b => b.onclick = () => { d.steps = (d.steps || 0) + 1000; after(); });
+  C.querySelectorAll("[data-sym]").forEach(b => b.onclick = () => { const s = new Set(d.sym || []); s.has(b.dataset.sym) ? s.delete(b.dataset.sym) : s.add(b.dataset.sym); d.sym = [...s]; after(); });
+  C.querySelectorAll("[data-set]").forEach(i => { i.onchange = () => { const f = i.dataset.set; d[f] = f === "note" ? i.value.trim() : i.value === "" ? undefined : +i.value; after(); }; if (i.type === "range") i.oninput = () => { i.closest(".trk").querySelector(".trk-h b").textContent = t("{v} h", {v: i.value}); }; });
+  let s = 0; for (const k of lastDays(400).reverse()) { if (filled(HD.log[k])) s++; else if (k !== today()) break; }
+  $("#streak").textContent = s ? "🔥 " + t("{n}-day streak", {n: s}) : "🌱 " + t("Start your streak today");
+  renderHabits(); renderScore(); renderSigList($("#todaySignals"), computeSignals().slice(0, 4));
+  const last = HD.screens[HD.screens.length - 1], due = !last || (Date.now() - new Date(last.date)) / 864e5 >= 7;
+  $("#mindDue").innerHTML = due ? `<div class="mind-cta"><span class="bub" style="width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)">${icon("brain", 22)}</span><div style="flex:1"><div style="font-weight:700">${t("Weekly mind check is due")}</div><div class="muted small">${t("4 quick questions · about 1 minute")}</div></div><button class="btn-primary" style="height:38px" type="button" id="mindNow">${t("Start")}</button></div>` : "";
+  $("#mindNow")?.addEventListener("click", mindCheck);
+}
+
+/* ---------- wellbeing index ---------- */
+function dayScore(e) {
+  if (!e) return null; const p = [];
+  if (e.mood) p.push((e.mood - 1) / 4 * 100); if (e.energy) p.push((e.energy - 1) / 4 * 100); if (e.stress) p.push((5 - e.stress) / 4 * 100);
+  if (e.sleep != null) { const dist = e.sleep < 7 ? 7 - e.sleep : e.sleep > 9 ? e.sleep - 9 : 0; p.push(Math.max(0, 100 - dist * 25)); }
+  if (e.steps != null) p.push(Math.min(1, e.steps / HD.goals.steps) * 100); if (e.water != null) p.push(Math.min(1, e.water / HD.goals.water) * 100);
+  return p.length >= 2 ? Math.round(mean(p)) : null;
+}
+function renderScore() {
+  const tv = dayScore(HD.log[today()]), wk = mean(lastDays(8).slice(0, 7).map(k => dayScore(HD.log[k])).filter(v => v != null));
+  const delta = tv != null && wk != null ? tv - Math.round(wk) : null;
+  const col = tv == null ? "var(--dim)" : tv >= 70 ? "#16A34A" : tv >= 45 ? "#F59E0B" : "#EF4444";
+  const word = t(tv == null ? "Check in to see it" : tv >= 80 ? "Doing great" : tv >= 65 ? "Doing well" : tv >= 45 ? "Okay — go gently" : "Needs some care");
+  const Rr = 50, C = 2 * Math.PI * Rr;
+  $("#scoreCard").innerHTML = `<div class="ring"><svg width="118" height="118" viewBox="0 0 118 118"><circle cx="59" cy="59" r="${Rr}" fill="none" stroke="var(--raise)" stroke-width="11"/><circle class="prog-c" cx="59" cy="59" r="${Rr}" fill="none" stroke="${col}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><div class="val"><b>${tv ?? "–"}</b><span>${t("of 100")}</span></div></div>
+    <div class="ring-meta"><span class="muted small" style="font-weight:700;letter-spacing:.06em;text-transform:uppercase">${t("Wellbeing today")}</span><span class="mood-word" style="color:${col}">${word}</span><span class="muted small">${t("7-day average:")} <b style="color:var(--text)">${wk != null ? Math.round(wk) : "–"}</b></span>${delta != null ? `<span class="small ${delta >= 0 ? "up" : "down"}" style="font-weight:700">${delta >= 0 ? "▲" : "▼"} ${t("{n} vs your week", {n: Math.abs(delta)})}</span>` : ""}</div>`;
+  requestAnimationFrame(() => requestAnimationFrame(() => { const c = $("#scoreCard .prog-c"); if (c) c.style.strokeDashoffset = C * (1 - (tv || 0) / 100); }));
+}
+
+/* ================= HABITS (healthy-habits challenge statement) ================= */
+const HABITS = {
+  sleep7: {label: "Sleep 7+ hours", ic: "sleep", auto: d => d.sleep != null ? d.sleep >= 7 : null},
+  water8: {label: "Drink 8 glasses of water", ic: "water", auto: d => d.water != null ? d.water >= HD.goals.water : null},
+  steps: {label: "Walk 7,000 steps", ic: "steps", auto: d => d.steps != null ? d.steps >= HD.goals.steps : null},
+  walk10: {label: "10-minute walk after a meal", ic: "steps"},
+  screens: {label: "Screens off 30 min before bed", ic: "sleep"},
+  breathe: {label: "3 minutes of slow breathing", ic: "stress"},
+  fruitveg: {label: "5 portions of fruit and vegetables", ic: "heart"},
+  nosugar: {label: "No sugary drinks today", ic: "water"},
+};
+HD.habits ||= [];
+const habitDone = (k, h) => { const d = HD.log[k]; if (!d) return false; const H = HABITS[h]; if (H.auto) { const v = H.auto(d); if (v != null) return v; } return !!d.hab?.[h]; };
+function habitStats(h, endAgo = 0) { const keys = Array.from({length: 7}, (_, i) => ago(endAgo + 6 - i)); return {done: keys.filter(k => habitDone(k, h)).length, keys}; }
+function renderHabits() {
+  const box = $("#habits"), d = day(today());
+  if (!HD.habits.length) { box.innerHTML = `<div class="hab-empty">${t("No habits chosen yet. Pick a few small ones — they're the easiest way to stay well.")}</div>`; $("#habSummary").textContent = ""; return; }
+  let tot = 0, hit = 0;
+  box.innerHTML = HD.habits.map(h => {
+    const H = HABITS[h]; if (!H) return ""; const st = habitStats(h), auto = H.auto && H.auto(d) != null, doneToday = habitDone(today(), h);
+    tot += 7; hit += st.done;
+    const dots = st.keys.map(k => `<span class="hdot ${habitDone(k, h) ? "on" : ""}" title="${fmtDate(k, {weekday: "short"})}"></span>`).join("");
+    const btn = H.auto ? `<span class="hab-auto ${doneToday ? "on" : ""}">${doneToday ? "✓ " : ""}${t("Auto")}</span>` : `<button type="button" class="hab-btn ${doneToday ? "on" : ""}" data-hab="${h}" aria-pressed="${doneToday}">${doneToday ? "✓ " + t("Done today") : t("Mark done")}</button>`;
+    return `<div class="hab ${doneToday ? "done" : ""}"><span class="hab-ic">${icon(H.ic, 18)}</span><div class="hab-main"><b>${t(H.label)}</b><div class="hdots" dir="ltr">${dots}</div></div><span class="muted small hab-count">${t("{a} of 7 days", {a: st.done})}</span>${btn}</div>`;
+  }).join("");
+  $("#habSummary").textContent = t("This week: {p}% of habit goals met", {p: Math.round(hit / Math.max(1, tot) * 100)});
+  box.querySelectorAll("[data-hab]").forEach(b => b.onclick = () => { d.hab = d.hab || {}; d.hab[b.dataset.hab] = d.hab[b.dataset.hab] ? 0 : 1; save(); renderHabits(); renderScore(); renderSigList($("#todaySignals"), computeSignals().slice(0, 4)); });
+}
+async function chooseHabits() {
+  const sel = new Set(HD.habits);
+  const ok = await modal(t("Choose up to 4 habits"), `<div class="hab-pick">${Object.entries(HABITS).map(([k, H]) => `<button type="button" class="hab-opt ${sel.has(k) ? "on" : ""}" data-pick="${k}">${icon(H.ic, 18)}<span>${t(H.label)}</span>${H.auto ? `<span class="pill">${t("Auto")}</span>` : ""}</button>`).join("")}</div>`,
+    {yes: t("Save"), onOpen: body => body.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => { const k = b.dataset.pick; if (sel.has(k)) sel.delete(k); else if (sel.size < 4) sel.add(k); else return toast(t("You can pick up to 4.")); b.classList.toggle("on", sel.has(k)); })});
+  if (!ok) return; HD.habits = [...sel]; save(); renderToday();
+}
+function habitSignals() {
+  const out = [];
+  for (const h of HD.habits) {
+    if (!HABITS[h]) continue;
+    const now = habitStats(h).done, prev = habitStats(h, 7).done, last3 = [0, 1, 2].filter(i => habitDone(ago(i), h)).length;
+    const prevDays = Array.from({length: 7}, (_, i) => ago(7 + i)).filter(k => filled(HD.log[k])).length;
+    if (prevDays >= 4 && now <= prev - 2 && last3 === 0) out.push({level: "watch", m: HABITS[h].ic, t: t("Habit slipping: {h}", {h: t(HABITS[h].label)}), d: t("Done on {a} of the last 7 days, down from {b} the week before — and not in the last 3 days.", {a: now, b: prev}), a: t("Restart small: do it once today, at the same time as something you already do (like after lunch)."), score: 1.2});
+    else if (now >= 6) out.push({level: "good", m: HABITS[h].ic, t: t("On a roll: {h}", {h: t(HABITS[h].label)}), d: t("Done on {a} of the last 7 days. Habits like this protect you when life gets busy.", {a: now}), score: 0});
+  }
+  return out;
+}
+
+/* ================= PREDICT: early signals ================= */
+const FLOOR = {sleep: .3, mood: .35, energy: .35, stress: .35, steps: .06, water: .6, sys: 3};
+const METRICS = {
+  sleep: {name: "Sleep", dir: 1, thr: 0.75, f: v => t("{v} h", {v: v.toFixed(1)}), worse: "Sleeping less than usual", better: "Sleeping more than usual", tip: "Keep the same bedtime tonight, dim screens 30 minutes before, and avoid tea or coffee after 4 pm."},
+  mood: {name: "Mood", dir: 1, thr: 0.7, df: v => t("{v} points", {v: v.toFixed(1)}), f: v => `${t(SCALES.mood.opts[Math.round(v) - 1])} (${v.toFixed(1)}/5)`, worse: "Mood is lower than usual", better: "Mood is up", tip: "Plan one small thing you enjoy today, and get some daylight or a short walk."},
+  energy: {name: "Energy", dir: 1, thr: 0.7, df: v => t("{v} points", {v: v.toFixed(1)}), f: v => v.toFixed(1) + "/5", worse: "Energy is dipping", better: "More energy than usual", tip: "Check sleep, water and meals first. Short breaks every hour help."},
+  stress: {name: "Stress", dir: -1, thr: 0.7, df: v => t("{v} points", {v: v.toFixed(1)}), f: v => v.toFixed(1) + "/5", worse: "Stress is rising", better: "Stress has eased", tip: "Try 4-7-8 breathing (in 4, hold 7, out 8) three times, and write down the one thing worrying you most."},
+  steps: {name: "Activity", dir: 1, pct: 0.3, f: v => t("{v} steps", {v: Math.round(v).toLocaleString()}), worse: "Moving less than usual", better: "Moving more", tip: "Add a 10-minute walk after a meal — cooler early morning or evening in hot weather."},
+  water: {name: "Water", dir: 1, pct: 0.3, f: v => t("{v} glasses", {v: v.toFixed(1)}), worse: "Drinking less water", better: "Drinking more water", tip: "Keep a bottle in sight and drink a glass with each meal; more on hot days."},
+  sys: {name: "Blood pressure", dir: -1, thr: 10, df: v => Math.round(v) + " mmHg", f: v => t("{v} (top number)", {v: Math.round(v)}), worse: "Blood pressure is above your usual", better: "Blood pressure is lower than your usual", tip: "Re-check at rest. If it stays at 140/90 or above, see a doctor."},
+};
+function computeSignals() {
+  const sig = [], recentK = lastDays(3), baseK = Array.from({length: 14}, (_, i) => ago(i + 3)).reverse(), cr = R().crisis;
+  const vals = (keys, m) => keys.map(k => HD.log[k]?.[m]).filter(v => v != null && v !== "");
+  const baseDays = baseK.filter(k => filled(HD.log[k])).length;
+  if (baseDays < 5) sig.push({level: "info", t: t("Learning your normal"), d: t("WellSense needs about 5 days of check-ins to learn your baseline. {n} more to go — or load demo data on the About page.", {n: Math.max(0, 5 - baseDays)})});
+  const moved = {};
+  if (baseDays >= 5) for (const [m, c] of Object.entries(METRICS)) {
+    const b = vals(baseK, m), r = vals(recentK, m); if (b.length < 4 || r.length < 2) continue;
+    const bm = mean(b), rm = mean(r), delta = rm - bm, change = c.pct ? (bm > 0 ? delta / bm : 0) : delta, thr = c.pct ?? c.thr;
+    // variability-aware: the change must be beyond this person's normal day-to-day swings (z <= -2) and big enough to matter
+    const method = window.SIG_METHOD || "hybrid", robust = window.SIG_ROBUST ?? false;
+    const med = a => { const s = [...a].sort((x, y) => x - y), n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; };
+    const center = robust && method !== "fixed" ? med(b) : bm, spread = robust && method !== "fixed" ? 1.4826 * med(b.map(v => Math.abs(v - center))) : Math.sqrt(mean(b.map(v => (v - bm) ** 2)));
+    const sd = Math.max(spread, FLOOR[m] * (c.pct ? bm : 1)), dz = rm - center, z = dz / (sd * Math.sqrt(1 / r.length + 1 / b.length));
+    const chg = method === "fixed" ? change : (c.pct ? (center > 0 ? dz / center : 0) : dz);
+    const Z = window.SIG_Z ?? 0.8, MINF = window.SIG_MINF ?? 1.15, PERS = window.SIG_PERSIST ?? 0; // tuned on 400 simulated users (see eval_results.js)
+    const persistW = r.filter(v => c.dir * (v - center) < -0.5 * sd).length, persistB = r.filter(v => c.dir * (v - center) > 0.5 * sd).length;
+    // fixed: big enough to matter. hybrid (WellSense): big enough to matter AND beyond this person's usual swings AND on most recent days
+    const isWorse = method === "fixed" ? c.dir * chg <= -thr : (c.dir * chg <= -thr * MINF && c.dir * z <= -Z && persistW >= Math.min(PERS, r.length));
+    const isBetter = method === "fixed" ? c.dir * chg >= thr : (c.dir * chg >= thr * MINF && c.dir * z >= Z && persistB >= Math.min(PERS, r.length));
+    if (isWorse) {
+      moved[m] = "worse";
+      const dirW = t(delta < 0 ? "lower" : "higher"), amount = c.pct ? `${Math.round(Math.abs(change) * 100)}% ${dirW}` : `${(c.df || c.f)(Math.abs(delta))} ${dirW}`;
+      sig.push({level: m === "sys" && rm >= 140 ? "act" : "watch", m, t: t(c.worse), d: t("Last 3 days: {r}. Your normal: {b} — {amt}.", {r: c.f(rm), b: c.f(bm), amt: amount}), a: t(c.tip), score: Math.abs(change / thr)});
+    } else if (isBetter) { moved[m] = "better"; sig.push({level: "good", m, t: t(c.better), d: t("Last 3 days: {r}, compared with your normal of {b}. Keep it up.", {r: c.f(rm), b: c.f(bm)}), score: 0}); }
+  }
+  const trio = ["sleep", "stress", "mood", "energy"].filter(m => moved[m] === "worse");
+  if (trio.length >= 3) sig.unshift({level: "act", t: t("Several signals are moving together"), d: t("{list} have all worsened over the last 3 days. Together these are an early sign of building stress, burnout or low mood.", {list: listJoin(trio.map(m => t(METRICS[m].name)))}), a: t("Talk it through with the Coach, ease your load this week, and reach out to someone you trust. If you feel unsafe, use Safety."), score: 99});
+  const lowDays = lastDays(7).map(k => HD.log[k]).filter(e => e?.mood && e.mood <= 2).length;
+  if (lowDays >= 4) sig.unshift({level: "act", t: t("Low mood on several days"), d: t("You've logged low mood on {n} of the last 7 days.", {n: lowDays}), a: t("Consider talking to a doctor or counsellor. {name} is {note}: {num}.", {name: L(cr.name), note: L(cr.note).split(" (")[0], num: cr.num}), score: 98});
+  const short = recentK.map(k => HD.log[k]?.sleep).filter(v => v != null);
+  if (short.length === 3 && short.every(v => v < 6) && !sig.some(s => s.m === "sleep")) sig.push({level: "watch", m: "sleep", t: t("Short sleep three nights running"), d: t("Under 6 hours each of the last 3 nights ({list}).", {list: listJoin(short.map(v => t("{v} h", {v})))}), a: t(METRICS.sleep.tip), score: 2});
+  const symCount = {}; lastDays(5).forEach(k => (HD.log[k]?.sym || []).forEach(s => symCount[s] = (symCount[s] || 0) + 1));
+  Object.entries(symCount).filter(([, n]) => n >= 3).forEach(([s, n]) => sig.push({level: "watch", t: t("{s} on {n} of the last 5 days", {s: t(s), n}), d: t("A repeating symptom is worth noticing."), a: t(s === "Headache" ? "Drink water, rest your eyes from screens, and see a doctor if headaches keep coming back, are severe, or come with fever, stiff neck or vision changes." : "If it continues for more than two weeks or affects daily life, talk to a doctor."), score: 1.5}));
+  const td = HD.log[today()]; if (td?.sys >= 180 || td?.dia >= 120) sig.unshift({level: "act", t: t("Very high blood pressure today"), d: `${td.sys}/${td.dia}.`, a: t("With chest pain, breathlessness, weakness or vision changes call {amb} now. Otherwise re-check in 5 minutes and contact a doctor today.", {amb: R().amb}), score: 100});
+  const sc = HD.screens.filter(x => (Date.now() - new Date(x.date)) / 864e5 <= 14).pop();
+  if (sc) { const p = sc.phq[0] + sc.phq[1], gg = sc.gad[0] + sc.gad[1];
+    if (p >= 3) sig.unshift({level: "act", t: t("Mind check: mood score is raised"), d: t("PHQ-2 score {n} of 6 (3 or more suggests checking in with a professional).", {n: p}), a: t("This isn't a diagnosis. A doctor or counsellor can help — {name}: {num}.", {name: L(cr.name), num: cr.num}), score: 97});
+    if (gg >= 3) sig.unshift({level: "act", t: t("Mind check: anxiety score is raised"), d: t("GAD-2 score {n} of 6 (3 or more suggests checking in with a professional).", {n: gg}), a: t("This isn't a diagnosis. Talking to a doctor or counsellor helps; the Coach can share calming techniques."), score: 96}); }
+  sig.push(...habitSignals());
+  if (baseDays >= 5 && !sig.some(s => s.level === "watch" || s.level === "act")) sig.push({level: "good", t: t("All steady"), d: t("Nothing has drifted from your normal over the last 3 days."), score: -1});
+  const rank = {act: 0, watch: 1, info: 2, good: 3};
+  return sig.sort((a, b) => rank[a.level] - rank[b.level] || (b.score || 0) - (a.score || 0));
+}
+const SIG_IC = {act: "alert", watch: "trend", good: "check", info: "info"};
+function renderSigList(box, list) {
+  box.innerHTML = list.map(s => `<div class="sig ${s.level}"><span class="ic">${icon(s.m && IC[s.m] && s.level !== "act" ? s.m : SIG_IC[s.level], 19)}</span><div><div class="t">${esc(s.t)}</div><div class="d">${esc(s.d)}</div>${s.a ? `<div class="a">${esc(s.a)}</div>` : ""}</div></div>`).join("") || `<p class="muted small">${t("No signals yet.")}</p>`;
+}
+
+/* ---------- charts ---------- */
+let RANGE = 14;
+function trendChart(keys, m, color, fmt, lo, hi) {
+  const W = 460, H = 130, P = 22, bw = (W - P) / keys.length;
+  const pts = keys.map((k, i) => [i, m === "score" ? dayScore(HD.log[k]) : HD.log[k]?.[m]]).filter(p => p[1] != null);
+  if (pts.length < 2) return `<div class="empty-c muted small">${t("Not enough entries yet")}</div>`;
+  const vs = pts.map(p => p[1]); lo = lo ?? Math.min(...vs); hi = hi ?? Math.max(...vs); if (hi === lo) { hi += 1; lo -= 1; }
+  const y = v => H - 16 - (v - lo) / (hi - lo) * (H - 30), x = i => P + i * bw + bw / 2;
+  const base = Array.from({length: 14}, (_, i) => ago(i + 3)).map(k => m === "score" ? dayScore(HD.log[k]) : HD.log[k]?.[m]).filter(v => v != null);
+  const bm = base.length >= 4 ? mean(base) : null;
+  const band = `<rect x="${P + (keys.length - 3) * bw}" y="4" width="${bw * 3}" height="${H - 18}" style="fill:var(--accent-soft)" rx="6"/>`;
+  const bl = bm != null ? `<line x1="${P}" x2="${W}" y1="${y(bm)}" y2="${y(bm)}" style="stroke:var(--chart-grid)" stroke-dasharray="5 5"/><text x="${W - 2}" y="${y(bm) - 4}" style="fill:var(--muted)" font-size="9" text-anchor="end">${esc(t("normal"))} ${esc(fmt(bm))}</text>` : "";
+  const line = `<polyline points="${pts.map(([i, v]) => x(i) + "," + y(v)).join(" ")}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round"/>`;
+  const dots = pts.map(([i, v]) => `<circle cx="${x(i)}" cy="${y(v)}" r="${i >= keys.length - 3 ? 4 : 2.6}" fill="${color}"><title>${keys[i]}: ${esc(fmt(v))}</title></circle>`).join("");
+  const lbl = keys.map((k, i) => (i % Math.ceil(keys.length / 7) === 0 || i === keys.length - 1) ? `<text x="${x(i)}" y="${H - 2}" fill="#7F918E" font-size="9" text-anchor="middle">${+k.slice(8)}</text>` : "").join("");
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" dir="ltr" role="img" aria-label="${esc(t(m))}">${band}${bl}${line}${dots}<text x="0" y="12" fill="#7F918E" font-size="9">${esc(fmt(hi))}</text><text x="0" y="${H - 16}" fill="#7F918E" font-size="9">${esc(fmt(lo))}</text>${lbl}</svg>`;
+}
+function renderSignals() {
+  renderSigList($("#allSignals"), computeSignals());
+  const k = lastDays(RANGE), box = (title, svg) => `<div class="chartbox"><div class="trk-h"><span>${t(title)}</span></div>${svg}</div>`;
+  $("#charts").innerHTML = box("Wellbeing index", trendChart(k, "score", "#14B8A6", v => Math.round(v), 0, 100)) + box("Mood", trendChart(k, "mood", "#EAB308", v => v.toFixed(1), 1, 5)) + box("Stress", trendChart(k, "stress", "#F87171", v => v.toFixed(1), 1, 5)) + box("Energy", trendChart(k, "energy", "#FB923C", v => v.toFixed(1), 1, 5)) + box("Sleep (hours)", trendChart(k, "sleep", "#A78BFA", v => v.toFixed(1) + "h")) + box("Steps", trendChart(k, "steps", "#22C55E", v => Math.round(v / 100) / 10 + "k")) + box("Water (glasses)", trendChart(k, "water", "#60A5FA", v => v.toFixed(0))) + box("Blood pressure (top)", trendChart(k, "sys", "#F472B6", v => Math.round(v)));
+  const Hh = HD.screens.slice(-8).reverse();
+  $("#mindHist").innerHTML = Hh.length ? `<table class="tbl"><thead><tr><th>${t("Date")}</th><th>${t("Mood (PHQ-2)")}</th><th>${t("Anxiety (GAD-2)")}</th></tr></thead><tbody>${Hh.map(s => { const p = s.phq[0] + s.phq[1], g = s.gad[0] + s.gad[1]; return `<tr><td>${fmtDate(s.date)}</td><td><span class="pill ${p >= 3 ? "warn" : "ok"}">${p} / 6</span></td><td><span class="pill ${g >= 3 ? "warn" : "ok"}">${g} / 6</span></td></tr>`; }).join("")}</tbody></table>` : `<p class="muted small">${t("No mind checks yet.")}</p>`;
+}
+document.querySelectorAll("#rangePills button").forEach(b => b.onclick = () => { RANGE = +b.dataset.r; document.querySelectorAll("#rangePills button").forEach(x => x.classList.toggle("on", x === b)); renderSignals(); });
+
+/* ---------- weekly mind check (PHQ-2 + GAD-2) ---------- */
+const MQ = [["phq", 0, "Little interest or pleasure in doing things"], ["phq", 1, "Feeling down, depressed or hopeless"], ["gad", 0, "Feeling nervous, anxious or on edge"], ["gad", 1, "Not being able to stop or control worrying"]];
+const MOPTS = ["Not at all", "Several days", "More than half the days", "Nearly every day"];
+async function mindCheck() {
+  const ans = {phq: [null, null], gad: [null, null]};
+  const ok = await modal(t("Weekly mind check"), `<p style="margin:0 0 6px">${t("Over the <b>last 2 weeks</b>, how often have you been bothered by…")}</p>${MQ.map(([s, i, q]) => `<div class="q"><span class="qt">${t(q)}</span><div class="opts4">${MOPTS.map((o, v) => `<button type="button" data-q="${s}:${i}:${v}">${t(o)}</button>`).join("")}</div></div>`).join("")}<p class="small muted">${t("PHQ-2 and GAD-2 screening questions. Your answers stay on this computer.")}</p>`,
+    {yes: t("Save"), onOpen: body => body.querySelectorAll("[data-q]").forEach(b => b.onclick = () => { const [s, i, v] = b.dataset.q.split(":"); ans[s][+i] = +v; b.parentElement.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); })});
+  if (!ok) return;
+  if ([...ans.phq, ...ans.gad].some(v => v == null)) { toast(t("Please answer all four questions."), true); return mindCheck(); }
+  HD.screens.push({date: new Date().toISOString(), ...ans}); save();
+  const p = ans.phq[0] + ans.phq[1], g = ans.gad[0] + ans.gad[1], cr = R().crisis;
+  const which = t(p >= 3 && g >= 3 ? "low mood and anxiety" : p >= 3 ? "low mood" : "anxiety");
+  const msg = (p >= 3 || g >= 3)
+    ? `<p>${t("Your answers suggest {which} may be affecting you (mood {p}/6, anxiety {g}/6).", {which, p, g})}</p><p>${t("This is a screening, not a diagnosis — but it's a good moment to talk to a doctor or counsellor.")} <b>${esc(L(cr.name))}</b>: <a href="tel:${cr.tel}">${cr.num}</a> — ${esc(L(cr.note))}.</p><p class="small">${t("If you ever feel unsafe, call {pol} or {amb} straight away.", {pol: R().pol, amb: R().amb})}</p>`
+    : `<p>${t("Your scores are in the low range (mood {p}/6, anxiety {g}/6). Keep checking in weekly — WellSense will flag it if this changes.", {p, g})}</p>`;
+  await modal(t("Thanks for checking in"), msg, {yes: t("Done"), no: null});
+  refreshPage();
+}
+$("#mindBtn").onclick = mindCheck;
+$("#habEdit").onclick = chooseHabits;
+
+/* ================= SUPPORT: coach ================= */
+const PREFERRED = ["Qwen3-4B-Instruct-2507-GGUF", "Llama-3.2-3B-Instruct-GGUF", "Phi-4-mini-instruct-GGUF", "Qwen3-1.7B-GGUF"];
+function SYS() {
+  const r = R(), cr = r.crisis, amb = r.amb2 ? `${r.amb} or ${r.amb2}` : r.amb;
+  return `You are WellSense Coach, a warm, practical wellbeing coach that runs privately on the user's own computer. The user is in ${r.name === "UAE" ? "the United Arab Emirates" : "Pakistan"}.
+Your job: help the user notice changes in their wellbeing early, keep healthy habits, and take small realistic next steps. Use their check-in data and signals when provided — refer to specific numbers kindly.
+Rules:
+- You are not a doctor. Give general information and say when to see a doctor. Don't diagnose.
+- Emergencies (chest pain, trouble breathing, stroke signs, severe bleeding, unconsciousness, poisoning, severe allergic reaction, heatstroke): START by telling them to call ${amb} (ambulance) now, then brief first-aid steps following NHS / Resuscitation Council UK guidance (e.g. suspected heart attack: sit them down; an adult over 16 who isn't allergic can chew one 300 mg aspirin). In emergencies don't suggest food or drink, apart from that aspirin rule and sips of cool water for an alert person with heatstroke.
+- Thoughts of suicide or self-harm: respond warmly, encourage them to contact ${cr.name.en} now (${cr.num}) or someone they trust, and call ${r.pol} or ${r.amb} if in immediate danger. Never discuss methods.
+- Medicines: general information only; for doses follow the label or ask a pharmacist or doctor. Never give children's doses.
+- Keep replies short: a sentence of empathy, then 3–5 concrete bullet steps.
+- ${AR_() ? "Reply in clear Modern Standard Arabic (العربية الفصحى), even if the user writes in English, unless they ask for another language." : "Reply in the language the user writes in (English, Urdu or Arabic)."}`;
+}
+const AI = {log: [], busy: false};
+const chatModels = () => S.models.filter(m => m.downloaded && m.recipe === "llamacpp" && !(m.labels || []).some(l => ["embeddings", "reranking", "classification"].includes(l))).sort((a, b) => (PREFERRED.indexOf(a.id) + 1 || 99) - (PREFERRED.indexOf(b.id) + 1 || 99));
+/* This PC's GPU (Quadro P2000, sm_61) can't run llama.cpp's GPU builds, so chat models load on the CPU backend. */
+async function ensureLoaded(model, slot) {
+  if (S.loaded.some(l => l.model_name === model)) return;
+  if (slot) slot.innerHTML = `<span class="spin">${t("Waking up the coach… (10–30 seconds the first time)")}</span>`;
+  await postJSON("/load", {model_name: model, llamacpp_backend: "cpu"}); await refreshStatus();
+}
+async function renderCoach() {
+  const list = chatModels(), sel = $("#aiModel"), prev = sel.value;
+  sel.innerHTML = list.map(m => `<option value="${esc(m.id)}">${esc(m.id)}</option>`).join("");
+  if (list.some(m => m.id === prev)) sel.value = prev;
+  const none = !list.length || !S.online;
+  $("#aiSetup").hidden = !none;
+  document.querySelectorAll("#aiForm textarea, #aiForm button, #aiModel, [data-ask]").forEach(e => e.disabled = none || AI.busy);
+  if (!S.online && typeof DEMO_REPLIES !== "undefined") { $("#aiSetup").hidden = false; $("#aiSetup").innerHTML = `<div class="flag ok">${t("Online demo — the coach runs privately on each person's own computer through Lemonade, so it can't run in this browser. Tap a starter to see a real answer recorded on our test laptop.")}</div>`; document.querySelectorAll("#aiForm textarea, #aiForm button, [data-ask]").forEach(e => e.disabled = false); return; }
+  if (!S.online) $("#aiSetup").innerHTML = `<div class="flag bad">${t("The local AI engine (Lemonade Server) isn't running. Start Lemonade, and the coach turns on by itself.")}</div>`;
+  else if (!list.length) {
+    $("#aiSetup").innerHTML = `<div class="flag warn">${t("The coach needs a chat model on this computer. Qwen3-4B-Instruct (2.5 GB) is recommended.")}</div><button class="btn-primary" id="getModel" type="button">${t("Download Qwen3-4B-Instruct")}</button>`;
+    $("#getModel").onclick = () => { postJSON("/pull", {model_name: "Qwen3-4B-Instruct-2507-GGUF", stream: false}).catch(() => {}); toast(t("Download started — this takes a few minutes.")); };
+  }
+}
+const SELF_HARM = ["kill myself", "suicide", "suicidal", "end my life", "want to die", "self harm", "self-harm", "hurt myself", "hurting myself", "harm myself", "harming myself", "take my own life", "end it all", "don't want to live", "dont want to live", "cut myself", "no reason to live", "khudkushi", "marna chahta", "marna chahti", "انتحار", "أنتحر", "اقتل نفسي", "أقتل نفسي", "أريد أن أموت", "اريد ان اموت", "إيذاء نفسي", "ايذاء نفسي", "أؤذي نفسي", "انهي حياتي", "أنهي حياتي"];
+function redFlag(s) {
+  s = s.toLowerCase();
+  if (SELF_HARM.some(w => s.includes(w))) return {kind: "mind"};
+  const a = AID_EN.find(x => x.urgent && [...x.kw, ...(AID_KW_AR[x.id] || [])].some(w => s.includes(w)));
+  if (a) return {kind: "aid", a: AID().find(y => y.id === a.id)};
+  if (["can't breathe", "cannot breathe", "vomiting blood", "coughing blood", "لا أستطيع التنفس", "لا يستطيع التنفس", "يتقيأ دم"].some(w => s.includes(w))) return {kind: "aid", a: AID()[0]};
+  return null;
+}
+function bubble(role, html) {
+  $("#aiEmpty").hidden = true;
+  const d = document.createElement("div"); d.className = role === "user" ? "u" : "b";
+  if (role === "user") { d.textContent = html; d.dir = "auto"; } else d.innerHTML = `<div class="av">${icon("heart", 19)}</div><div class="body"><div class="who"><b>${t("Coach")}</b><span class="muted mono small">${esc($("#aiModel").value)}</span></div><div class="slot" dir="auto">${html}</div></div>`;
+  $("#aiMsgs").append(d); const sc = $("#aiScroll"); sc.scrollTop = sc.scrollHeight; return d;
+}
+function context() {
+  if (!$("#aiCtx").checked) return "";
+  const c = HD.card, out = [];
+  const rows = lastDays(7).map(k => { const e = HD.log[k]; if (!filled(e)) return null; const f = []; for (const m of ["mood", "energy", "stress"]) if (e[m]) f.push(`${m} ${SCALES[m].opts[e[m] - 1]}`); if (e.sleep != null) f.push(`sleep ${e.sleep}h`); if (e.steps != null) f.push(`steps ${e.steps}`); if (e.water != null) f.push(`water ${e.water} glasses`); if (e.sys) f.push(`BP ${e.sys}/${e.dia}`); if (e.sym?.length) f.push(`symptoms: ${e.sym.join(", ")}`); if (e.note) f.push(`note: ${e.note}`); return `${k}: ${f.join(", ")}`; }).filter(Boolean);
+  if (rows.length) out.push("Check-ins (last 7 days):\n" + rows.join("\n"));
+  const was = LANG; LANG = "en"; const sig = computeSignals().filter(s => s.level !== "info"); LANG = was;
+  if (sig.length) out.push("WellSense early signals (last 3 days vs personal 14-day baseline):\n" + sig.map(s => `- [${s.level}] ${s.t}: ${s.d}`).join("\n"));
+  if (HD.habits.length) out.push("Habits (done in last 7 days / previous 7):\n" + HD.habits.filter(h => HABITS[h]).map(h => `- ${HABITS[h].label}: ${habitStats(h).done}/7 (previous week ${habitStats(h, 7).done}/7)`).join("\n"));
+  const sc = HD.screens[HD.screens.length - 1]; if (sc) out.push(`Latest mind check (${sc.date.slice(0, 10)}): PHQ-2 ${sc.phq[0] + sc.phq[1]}/6, GAD-2 ${sc.gad[0] + sc.gad[1]}/6`);
+  if (c.allergies) out.push("Allergies: " + c.allergies); if (c.meds) out.push("Regular medicines: " + c.meds); if (c.conditions) out.push("Conditions: " + c.conditions);
+  if (c.name) out.push("First name: " + c.name.split(" ")[0]);
+  return out.length ? "\n\nThe user has chosen to share their WellSense data:\n" + out.join("\n\n") : "";
+}
+const telRe = () => new RegExp(`\\b(${[R().amb, R().amb2, R().pol].filter(Boolean).join("|")})\\b`, "g");
+const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*(?!\s)([^*\n]+?)\*(?!\*)/g, "$1<i>$2</i>").replace(/^#{1,4} ?(.+)$/gm, "<b>$1</b>").replace(/^\s*[-*] (.+)$/gm, "• $1").replace(telRe(), '<a href="tel:$1">$1</a>');
+async function streamChat(messages, slot, onDone) {
+  const model = $("#aiModel").value || chatModels()[0]?.id;
+  await ensureLoaded(model, slot);
+  slot.innerHTML = `<span class="spin">${t("Thinking…")}</span>`;
+  const r = await api("/chat/completions", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({model, stream: true, temperature: 0.4, max_tokens: 800, messages})});
+  const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "", out = "", started = false; const t0 = performance.now();
+  for (;;) {
+    const {value, done} = await rd.read(); if (done) break;
+    buf += dec.decode(value, {stream: true}); const lines = buf.split("\n"); buf = lines.pop();
+    for (const ln of lines) { const s = ln.replace(/^data:\s*/, "").trim(); if (!s || s === "[DONE]") continue;
+      try { const dl = JSON.parse(s).choices?.[0]?.delta?.content; if (!dl) continue; if (!started) { slot.innerHTML = `<div class="text md" dir="auto"></div>`; started = true; } out += dl; slot.querySelector(".text").innerHTML = md(out.replace(/<think>[\s\S]*?(<\/think>|$)/g, "").trim()); const sc = $("#aiScroll"); if (sc && slot.closest("#aiScroll") && sc.scrollHeight - sc.scrollTop - sc.clientHeight < 160) sc.scrollTop = sc.scrollHeight; } catch {} }
+  }
+  slot.insertAdjacentHTML("beforeend", `<span class="muted small">${t("{s} s · on this computer · general information, not medical advice", {s: ((performance.now() - t0) / 1000).toFixed(0)})}</span>`);
+  onDone?.(out); return out;
+}
+function demoAsk(text) {
+  const rec = (typeof DEMO_REPLIES !== "undefined" ? DEMO_REPLIES : {})[text];
+  bubble("user", text);
+  const slot = bubble("bot", "").querySelector(".slot");
+  if (!rec) { slot.innerHTML = `<div class="muted">${t("In this online demo, pick one of the starters above.")}</div>`; return; }
+  slot.innerHTML = `<div class="text md" dir="auto">${md(rec.text)}</div><span class="muted small">${t("Recorded answer from the local AI (Qwen3-4B on a 2018 laptop CPU)")} · ${rec.secs} s</span>`;
+}
+async function ask(text) {
+  if (AI.busy || !text) return;
+  if (!S.online && typeof DEMO_REPLIES !== "undefined" && !redFlag(text)) return demoAsk(text);
+  const f = redFlag(text), r = R(), cr = r.crisis; bubble("user", text);
+  if (f) {
+    const w = document.createElement("div"); w.className = "emerg-inline";
+    w.innerHTML = f.kind === "mind"
+      ? `<b>${t("You don't have to go through this alone.")}</b> ${t("If you might act on these thoughts, call {pol} or {amb} now.", {pol: `<a href="tel:${r.pol}">${r.pol}</a>`, amb: `<a href="tel:${r.amb}">${r.amb}</a>`})} ${t("Talk to")} <b>${esc(L(cr.name))}</b>: <a href="tel:${cr.tel}">${cr.num}</a>. <button class="btn-ghost sm" data-go="mind" type="button">${t("What to do")}</button>`
+      : `<b>${t("This could be an emergency.")}</b> ${t("Call {amb} now.", {amb: `<a href="tel:${r.amb}">${r.amb}</a>` + (r.amb2 ? ` ${t("or")} <a href="tel:${r.amb2}">${r.amb2}</a>` : "")})} <button class="btn-ghost sm" data-go="${f.a.id}" type="button">${t("First aid:")} ${esc(f.a.t)}</button>`;
+    $("#aiMsgs").append(w); w.querySelector("[data-go]").onclick = e => { location.hash = "safety"; setTimeout(() => openAid(e.target.dataset.go), 50); };
+  }
+  if (!S.online && typeof DEMO_REPLIES !== "undefined") { bubble("bot", `<div class="muted">${t("In this online demo the AI coach is off. Use the emergency numbers and first-aid steps above.")}</div>`); return; }
+  AI.log.push({role: "user", content: text});
+  const slot = bubble("bot", `<span class="spin">${t("Thinking…")}</span>`).querySelector(".slot");
+  AI.busy = true; renderCoach();
+  try { await streamChat([{role: "system", content: SYS() + context()}, ...AI.log.slice(-10)], slot, out => AI.log.push({role: "assistant", content: out})); }
+  catch (e) { AI.log.pop(); slot.innerHTML = `<div class="err">${t("The coach couldn't answer:")} ${esc(e.message)}</div>`; }
+  AI.busy = false; renderCoach();
+}
+$("#aiForm").onsubmit = e => { e.preventDefault(); const v = $("#aiInput").value.trim(); $("#aiInput").value = ""; ask(v); };
+$("#aiInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#aiForm").requestSubmit(); } });
+document.querySelectorAll("[data-ask]").forEach(b => b.onclick = () => ask(b.textContent.trim()));
+$("#aiNew").onclick = () => { AI.log = []; $("#aiMsgs").innerHTML = ""; $("#aiEmpty").hidden = false; };
+$("#aiSummaryBtn").onclick = async () => {
+  if (!S.online || !chatModels().length) { toast(t("The coach isn't ready — see the Coach page."), true); return; }
+  const box = $("#aiSummary"); box.hidden = false; box.className = "ai-summary"; box.innerHTML = `<b>${t("Your week, in brief")}</b><div class="slot" dir="auto"></div>`;
+  const btn = $("#aiSummaryBtn"); btn.disabled = true; const ctxOn = $("#aiCtx").checked; $("#aiCtx").checked = true;
+  try { await streamChat([{role: "system", content: SYS() + context()}, {role: "user", content: "Write my weekly wellbeing summary: 2 sentences on how my week went using my numbers, then the 3 most useful small actions for next week as bullets. Mention any signal that needs attention first." + (AR_() ? " اكتب الملخص باللغة العربية." : "")}], box.querySelector(".slot")); }
+  catch (e) { box.querySelector(".slot").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+  $("#aiCtx").checked = ctxOn; btn.disabled = false;
+};
+
+/* ================= SAFETY ================= */
+let cpr = null;
+const AID = () => AR_() ? AID_AR : AID_EN;
+function renderSafety() {
+  const r = R();
+  document.querySelectorAll("#regionPills button").forEach(b => { b.classList.toggle("on", b.dataset.region === HD.region); b.setAttribute("aria-pressed", b.dataset.region === HD.region); });
+  $("#numbers").innerHTML = r.numbers.map(([n, nm, s, big]) => `<a class="num ${big ? "num-big" : ""}" href="tel:${n}"><span class="mono n">${n}</span><span><b>${t(nm)}</b><span class="muted small">${t(s)}</span></span></a>`).join("");
+  $("#services").innerHTML = r.services.map(([n, nm, s, tel]) => `<a class="num" href="tel:${tel}"><span class="mono n" style="color:var(--accent);font-size:16px;min-width:96px">${n}</span><span><b>${t(nm)}</b><span class="muted small">${t(s)}</span></span></a>`).join("") + (HD.region === "ae" ? `<p class="muted small" style="margin:4px 0 0">${t("Abu Dhabi residents can also book care and see health records in the Department of Health's Sahatna app.")}</p>` : "");
+  $("#aidList").innerHTML = AID().map(a => `<button type="button" class="aid-pill ${a.urgent ? "urg" : ""}" data-aid="${a.id}"><b>${a.t}</b><span class="small">${a.tag}</span></button>`).join("");
+  $("#aidList").querySelectorAll("[data-aid]").forEach(b => b.onclick = () => openAid(b.dataset.aid));
+  if (!cpr) openAid($("#aidCard").dataset.open || "cpr", true);
+  const F = [["name", "Full name"], ["blood", "Blood group"], ["allergies", "Allergies"], ["meds", "Regular medicines"], ["conditions", "Medical conditions"], ["contact", "Emergency contact (name & phone)"], ["doctor", "Doctor / hospital"]];
+  $("#card").innerHTML = F.map(([k, l]) => `<label class="field"><span>${t(l)}</span><input class="inp" data-card="${k}" value="${esc(HD.card[k] || "")}" autocomplete="off" dir="auto"></label>`).join("");
+  $("#card").querySelectorAll("[data-card]").forEach(i => i.oninput = () => { HD.card[i.dataset.card] = i.value.trim(); save(); });
+  $("#printCard").onclick = () => { const w = window.open("", "_blank", "width=520,height=660"); if (!w) return toast(t("Allow pop-ups to print the card."), true);
+    w.document.write(`<html dir="${AR_() ? "rtl" : "ltr"}"><title>${t("Emergency card")}</title><body style="font-family:Segoe UI,Tahoma,sans-serif;padding:24px"><div style="border:3px solid #c00;border-radius:14px;padding:18px;max-width:420px"><h2 style="margin:0 0 4px;color:#c00">${t("EMERGENCY MEDICAL CARD")}</h2><p style="margin:0 0 12px">${t("In an emergency call")} <b>${L(r.ambText)}</b></p>${F.map(([k, l]) => `<p style="margin:6px 0"><b>${t(l)}:</b> ${esc(HD.card[k] || "—")}</p>`).join("")}</div><script>print()<\/script></body></html>`); w.document.close(); };
+}
+document.querySelectorAll("#regionPills button").forEach(b => b.onclick = () => { HD.region = b.dataset.region; save(); renderSos(); renderSafety(); toast(t(HD.region === "ae" ? "Showing UAE numbers and services." : "Showing Pakistan numbers and services.")); });
+function openAid(id, quiet) {
+  const a = AID().find(x => x.id === id); if (!a) return;
+  if (cpr) toggleCpr();
+  const box = $("#aidCard"); box.dataset.open = id; const r = R();
+  document.querySelectorAll(".aid-pill").forEach(b => b.classList.toggle("on", b.dataset.aid === id));
+  const note = a.id === "poison" ? L(r.poison) : a.note;
+  box.innerHTML = `<div class="row-between" style="flex-wrap:wrap"><h2 class="title">${a.t}</h2>${a.urgent ? `<a class="btn-call" href="tel:${r.amb}">${t("Call {n}", {n: r.amb})}</a>` : ""}</div><p class="aid-when">${a.when}</p><ol class="steps">${a.steps.map(s => `<li>${fill(s)}</li>`).join("")}</ol>${a.dont ? `<div class="aid-dont"><b>${t("Don't")}</b><ul>${a.dont.map(s => `<li>${fill(s)}</li>`).join("")}</ul></div>` : ""}${note ? `<p class="muted small" style="margin:0">${fill(note)}</p>` : ""}${a.cpr ? `<div class="cpr"><button type="button" class="btn-primary" id="cprBtn">${t("Start CPR beat · 110/min")}</button><div class="cpr-ring" id="cprRing"><span class="mono" id="cprCount">0</span><span class="small muted">${t("compressions")}</span></div><div class="small muted" id="cprTime">${t("Push on every beat.")}</div></div>` : ""}`;
+  if (a.cpr) $("#cprBtn").onclick = toggleCpr;
+  if (!quiet) box.scrollIntoView({behavior: "smooth", block: "start"});
+}
+function toggleCpr() {
+  if (cpr) { clearInterval(cpr.id); cpr.ctx.close(); cpr = null; const b = $("#cprBtn"); if (b) b.textContent = t("Start CPR beat · 110/min"); return; }
+  const ctx = new AudioContext(), t0 = Date.now(); let n = 0;
+  cpr = {ctx, id: setInterval(() => {
+    const ring = $("#cprRing"); if (!ring || $("#page-safety").hidden) return toggleCpr();
+    n++; const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = n % 30 === 0 ? 1100 : 880; g.gain.setValueAtTime(.4, ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .08); o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + .09);
+    ring.classList.remove("beat"); void ring.offsetWidth; ring.classList.add("beat"); $("#cprCount").textContent = n;
+    const s = Math.floor((Date.now() - t0) / 1000); $("#cprTime").textContent = t("Push on every beat.") + ` ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` + (s >= 120 && s % 120 < 10 ? " — " + t("swap rescuers if you can") : "");
+  }, 60000 / 110)};
+  $("#cprBtn").textContent = t("Stop beat");
+}
+
+/* ================= ABOUT ================= */
+function renderEval() {
+  const E = typeof EVAL_RESULTS !== "undefined" ? EVAL_RESULTS : null, box = $("#evalBox"); if (!box) return;
+  if (!E) { box.innerHTML = `<p class="muted small">${t("Evaluation results will appear here.")}</p>`; return; }
+  const a = E.adaptive, f = E.fixed, pct = v => Math.round(v * 100) + "%";
+  box.innerHTML = `<div class="eval-tiles"><div class="tile"><b>${pct(a.sens[3])}</b><span>${t("drifts caught within 3 days")}</span></div><div class="tile"><b>${pct(a.fa)}</b><span>${t("false alarms on stable users")}</span></div><div class="tile"><b>${t("{n} days", {n: a.median})}</b><span>${t("median time to first signal")}</span></div><div class="tile"><b>${pct(E.safety.sens)}</b><span>${t("emergency phrases caught (EN + AR)")}</span></div></div>
+   <table class="tbl"><thead><tr><th>${t("Days since change began")}</th>${[1, 2, 3, 4, 5].map(d => `<th>${d}</th>`).join("")}</tr></thead><tbody><tr><td>${t("Adaptive thresholds (WellSense)")}</td>${[1, 2, 3, 4, 5].map(d => `<td>${pct(a.sens[d])}</td>`).join("")}</tr><tr><td>${t("Fixed thresholds (baseline method)")}</td>${[1, 2, 3, 4, 5].map(d => `<td>${pct(f.sens[d])}</td>`).join("")}</tr></tbody></table>
+   <p class="muted small" style="margin:0">${t("{n} simulated users ({d} with a gradual change in sleep, mood, stress, energy, activity or water; {s} stable). False alarms: adaptive {fa1} vs fixed {fa2}. Safety test: {p} emergency phrases and {q} everyday phrases; {spec} of everyday phrases correctly left alone. Synthetic data only — not a clinical validation.", {n: E.n, d: E.nDrift, s: E.nStable, fa1: pct(a.fa), fa2: pct(f.fa), p: E.safety.pos, q: E.safety.neg, spec: pct(E.safety.spec)})}</p>`;
+}
+function renderAbout() {
+  renderEval();
+  const I = S.info || {}, gpu = I.devices?.nvidia_gpu?.[0]?.name || I.devices?.amd_gpu?.[0]?.name, model = chatModels()[0]?.id || t("not installed yet");
+  $("#techKv").innerHTML = [["Sense", t("Daily check-in (mood, energy, stress, sleep, water, steps, optional blood pressure, symptoms) and weekly PHQ-2 / GAD-2")], ["Predict", t("Personal baseline: last 3 days vs the 14 days before, per measure, plus combined-pattern and repeated-symptom rules. Fully explainable.")], ["Support", t("Local AI coach ({m}) with emergency and crisis safeguards", {m: model})], ["Languages", t("English and Arabic (right-to-left); the coach can also reply in Urdu")], ["Regions", t("Pakistan and UAE emergency numbers, first aid and support lines")], ["AI engine", t("Lemonade Server {v} on this computer — {s}", {v: S.health?.version || "", s: t(S.online ? "running" : "offline")})], ["Runs on", `${(I.Processor || t("this computer's processor")).replace(/\(R\)|\(TM\)/g, "")}${gpu ? " · " + gpu : ""}`], ["Data", t("Stored only in this browser on this device. No account, no cloud, nothing uploaded.")]]
+    .map(([k, v]) => `<dt>${t(k)}</dt><dd>${esc(v)}</dd>`).join("");
+}
+$("#demoBtn").onclick = async () => {
+  if (Object.keys(HD.log).some(k => filled(HD.log[k])) && !await modal(t("Load demo data?"), `<p>${t("This replaces your current check-ins with 4 weeks of sample data that shows how early signals work. Your emergency card is kept.")}</p>`, {yes: t("Load demo")})) return;
+  HD.log = {}; let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  for (let i = 27; i >= 0; i--) {
+    const k = ago(i), late = i <= 2, mid = i === 3;
+    HD.log[k] = late ? {mood: i === 0 ? 2 : 3 - (i % 2), energy: 2, stress: 4 + (i === 0 ? 1 : 0), sleep: [5.5, 5, 5.5][i], water: 4 + (i % 2), steps: 3200 + Math.round(rnd() * 900), sys: 128 + i, dia: 84, sym: i <= 1 ? ["Headache", "Trouble focusing"] : ["Headache"], note: i === 0 ? (AR_() ? "أسبوع مواعيد تسليم، أسهر لوقت متأخر" : "Deadline week, staying up late") : ""}
+      : {mood: Math.min(5, 4 + (rnd() > .7 ? 1 : 0) - (rnd() > .85 ? 1 : 0)), energy: 4 - (rnd() > .75 ? 1 : 0), stress: 2 + (rnd() > .7 ? 1 : 0), sleep: Math.round((7 + rnd() * 1) * 2) / 2 - (mid ? 0.5 : 0), water: 7 + Math.round(rnd() * 2), steps: 6200 + Math.round(rnd() * 2600), sys: 116 + Math.round(rnd() * 8), dia: 76 + Math.round(rnd() * 5)};
+  }
+  for (let i = 27; i >= 0; i--) { const e = HD.log[ago(i)]; e.hab = i <= 2 ? {walk10: 0, screens: 0} : {walk10: rnd() > .15 ? 1 : 0, screens: rnd() > .25 ? 1 : 0}; }
+  HD.habits = ["sleep7", "water8", "walk10", "screens"];
+  const d = new Date(); d.setDate(d.getDate() - 8); HD.screens = [{date: d.toISOString(), phq: [0, 1], gad: [1, 0]}];
+  save(); toast(t("Demo data loaded — see Today and Signals.")); location.hash = "today";
+};
+$("#exportBtn").onclick = () => {
+  const cols = ["date", "mood", "energy", "stress", "sleep", "water", "steps", "sys", "dia", "sym", "note"];
+  const rows = Object.keys(HD.log).sort().filter(k => filled(HD.log[k])).map(k => [k, ...cols.slice(1).map(c => { const v = HD.log[k][c]; return Array.isArray(v) ? v.join("; ") : v ?? ""; })]);
+  const csv = "﻿" + [cols, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = "wellsense-data.csv"; a.click();
+};
+$("#clearBtn").onclick = async () => { if (!await modal(t("Delete all your data?"), `<p>${t("This removes every check-in, mind check and your emergency card from this computer. It can't be undone.")}</p>`, {yes: t("Delete everything")})) return; HD.log = {}; HD.card = {}; HD.screens = []; save(); toast(t("All data deleted.")); refreshPage(); };
+
+/* ---------- theme ---------- */
+function setTheme(th) { document.documentElement.dataset.theme = th; try { localStorage.setItem("ws.theme", th); } catch {} $("#themeBtn").innerHTML = icon(th === "dark" ? "sun" : "moon", 18); refreshPage(); }
+$("#themeBtn").onclick = () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+$("#themeBtn").innerHTML = icon(document.documentElement.dataset.theme === "dark" ? "sun" : "moon", 18);
+$("#langBtn").onclick = () => setLang(AR_() ? "en" : "ar");
+
+/* ---------- router & boot ---------- */
+const PAGES = ["today", "signals", "coach", "safety", "about"];
+const current = () => { const r = location.hash.slice(1); return PAGES.includes(r) ? r : "today"; };
+function refreshPage() { const p = current(); if (p === "today") renderToday(); if (p === "signals") renderSignals(); if (p === "coach") renderCoach(); if (p === "safety") renderSafety(); if (p === "about") renderAbout(); }
+function route() {
+  const p = current();
+  PAGES.forEach(x => $("#page-" + x).hidden = x !== p);
+  document.querySelectorAll(".top .seg a").forEach(a => a.classList.toggle("on", a.dataset.route === p));
+  window.scrollTo(0, 0); refreshPage();
+}
+addEventListener("hashchange", route);
+captureStatic(); setLang(LANG); route();
+(async () => { await refreshStatus(); await refreshModels(); await refreshInfo(); if (["coach", "about"].includes(current())) refreshPage(); })();
+setInterval(async () => { await refreshStatus(); if (current() === "coach" && !AI.busy) { if (!chatModels().length) await refreshModels(); renderCoach(); } }, 8000);
+
+if (HOSTED && !Object.keys(HD.log).some(k => filled(HD.log[k]))) { HD.region = "ae"; save(); renderSos(); $("#demoBtn").onclick(); }
+
+</script>
+</body>
+</html>

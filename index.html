@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WellSense — early wellbeing signals</title>
+<script>try{var d=document.documentElement;d.dataset.theme=localStorage.getItem("ws.theme")||"light";if(localStorage.getItem("ws.lang")==="ar"){d.lang="ar";d.dir="rtl"}}catch(e){document.documentElement.dataset.theme="light"}</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='10' fill='%230E9F90'/%3E%3Cpath d='M5 17h5l3-7 4 13 3-8 2 2h5' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="wellsense.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#today" aria-label="WellSense home">
+    <svg width="38" height="38" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2DD4BF"/><stop offset="1" stop-color="#0E9F90"/></linearGradient></defs><rect width="32" height="32" rx="10" fill="url(#lg)"/><path d="M5 17h5l3-7 4 13 3-8 2 2h5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span><span class="wordmark" data-dyn>WellSense</span><span class="tag">Sense early · act sooner</span></span>
+  </a>
+  <nav class="seg" aria-label="Main">
+    <a href="#today" data-route="today"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span>Today</span></a>
+    <a href="#signals" data-route="signals"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span>Signals</span></a>
+    <a href="#coach" data-route="coach"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Coach</span></a>
+    <a href="#safety" data-route="safety"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M12 9v6M9 12h6"/></svg><span>Safety</span></a>
+    <a href="#about" data-route="about"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>About</span></a>
+  </nav>
+  <div class="top-right">
+    <span class="status" id="status" title="WellSense uses a private AI engine (Lemonade) on this computer"><span class="dot"></span><span id="statusText" data-dyn>Connecting…</span></span>
+    <button class="lang-btn" id="langBtn" type="button" aria-label="Switch language" data-dyn>عربي</button>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch light or dark theme" data-dyn></button>
+    <a class="sos-btn" href="#safety" aria-label="Emergency help"><svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>SOS</a>
+  </div>
+</header>
+
+<!-- TODAY -->
+<section class="page" id="page-today">
+  <div class="wrap">
+    <section class="greet">
+      <div class="art" id="greetArt" aria-hidden="true" data-dyn></div>
+      <div class="greet-main">
+        <p class="eyebrow" id="todayDate" data-dyn></p>
+        <h1 id="greet" data-dyn></h1>
+        <p>A one-minute check-in. WellSense learns what's normal for you and lets you know early when something starts to change.</p>
+        <div class="prog"><div class="track"><div class="fill" id="progFill"></div></div><span id="progText" data-dyn></span></div>
+        <div class="acts"><span class="badge" id="streak" data-dyn></span></div>
+      </div>
+      <div class="ring-card" id="scoreCard" data-dyn></div>
+    </section>
+    <div class="two">
+      <section class="panel" style="flex:2 1 620px">
+        <div class="row-between"><h2>Daily check-in</h2><span class="muted small">Saves automatically</span></div>
+        <div class="trk-grid" id="checkin" data-dyn></div>
+      </section>
+      <section class="panel" style="flex:1 1 340px">
+        <h2>Today's signals</h2>
+        <div id="todaySignals" class="sig-list" data-dyn></div>
+        <a class="btn-ghost lnk" href="#signals">See all signals and trends</a>
+        <div id="mindDue" data-dyn></div>
+      </section>
+    </div>
+    <section class="panel">
+      <div class="row-between" style="flex-wrap:wrap"><div><h2>My healthy habits</h2><p class="muted small" style="margin:4px 0 0">Pick up to 4 small daily habits. Sleep, water and steps tick themselves from your check-in.</p></div><div class="acts"><span class="badge-soft" id="habSummary" data-dyn></span><button class="btn-ghost sm" id="habEdit" type="button">Choose habits</button></div></div>
+      <div class="habs" id="habits" data-dyn></div>
+    </section>
+  </div>
+</section>
+
+<!-- SIGNALS -->
+<section class="page" id="page-signals" hidden>
+  <div class="wrap">
+    <div class="page-head">
+      <div><p class="eyebrow">Predict</p><h1>Signals</h1><p class="muted">Your last 3 days compared with your own normal — the 14 days before. Changes show up here before they become problems.</p></div>
+      <div class="acts"><button class="btn-ghost" id="mindBtn" type="button">🧠 Weekly mind check</button><button class="btn-primary" id="aiSummaryBtn" type="button">✨ AI weekly summary</button></div>
+    </div>
+    <section class="panel"><div id="aiSummary" hidden data-dyn></div><h2>Early signals</h2><div id="allSignals" class="sig-grid" data-dyn></div></section>
+    <section class="panel">
+      <div class="row-between" style="flex-wrap:wrap"><h2>Trends</h2><div class="pills" id="rangePills" role="group" aria-label="Range"><button type="button" data-r="14" class="on">14 days</button><button type="button" data-r="30">30 days</button></div></div>
+      <div class="chart-grid" id="charts" data-dyn></div>
+      <p class="muted small" style="margin:0">Dashed line = your normal. Shaded area = the last 3 days.</p>
+    </section>
+    <section class="panel">
+      <div class="row-between" style="flex-wrap:wrap"><h2>Mind check history</h2><span class="muted small">PHQ-2 (mood) and GAD-2 (anxiety) — short screening questions, not a diagnosis.</span></div>
+      <div id="mindHist" data-dyn></div>
+    </section>
+  </div>
+</section>
+
+<!-- COACH -->
+<section class="page" id="page-coach" hidden>
+  <div class="wrap">
+    <section class="panel ai-panel">
+      <div class="row-between" style="flex-wrap:wrap">
+        <div class="coach-head">
+          <span class="coach-av"><svg class="ico" viewBox="0 0 24 24" style="width:28px;height:28px" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span>
+          <div><h1 style="font-size:26px">Your coach</h1><p class="muted small" style="margin:3px 0 0">Private AI on this computer. Kind, practical, and it knows your check-ins if you let it. General information, not medical advice.</p></div>
+        </div>
+        <div class="acts"><label class="chip"><span>Model</span><select id="aiModel" aria-label="Model" data-dyn></select></label><button class="btn-ghost sm" id="aiNew" type="button">New chat</button></div>
+      </div>
+      <div id="aiSetup" hidden data-dyn></div>
+      <div class="ai-scroll" id="aiScroll">
+        <div id="aiEmpty" class="ai-empty">
+          <p style="margin:0;font-size:18px;font-weight:700">Hi! What would help today? 👋</p>
+          <p class="muted" style="margin:0">Pick a starter or type your own — in English, Arabic or Urdu.</p>
+          <div class="chips">
+            <button type="button" class="qchip" data-ask>Explain my early signals this week</button>
+            <button type="button" class="qchip" data-ask>Build me a habit plan from my data</button>
+            <button type="button" class="qchip" data-ask>Make me a simple 7-day plan to sleep better</button>
+            <button type="button" class="qchip" data-ask>Quick ways to lower stress at work</button>
+            <button type="button" class="qchip" data-ask>How do I stay well in very hot weather?</button>
+            <button type="button" class="qchip" data-ask>I feel low lately. What small steps can help?</button>
+          </div>
+        </div>
+        <div id="aiMsgs" class="messages" data-dyn></div>
+      </div>
+      <form id="aiForm" class="composer" autocomplete="off">
+        <div class="comp-bottom"><label class="grow"><span class="sr">Message</span><textarea id="aiInput" rows="2" placeholder="Talk to your coach…" dir="auto"></textarea></label><button type="submit" class="send" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
+        <label class="small muted ctx"><input type="checkbox" id="aiCtx" checked> Let the coach use my check-ins, signals and emergency card (never leaves this computer)</label>
+      </form>
+    </section>
+  </div>
+</section>
+
+<!-- SAFETY -->
+<section class="page" id="page-safety" hidden>
+  <div class="wrap">
+    <div class="row-between" style="flex-wrap:wrap">
+      <div><p class="eyebrow">Safety</p><h1>Help when it matters</h1></div>
+      <div class="acts"><span class="muted small">Where are you?</span><div class="pills" id="regionPills" role="group" aria-label="Region"><button type="button" data-region="pk">🇵🇰 Pakistan</button><button type="button" data-region="ae">🇦🇪 UAE</button></div></div>
+    </div>
+    <div class="sos" id="sosBar" role="region" aria-label="Emergency numbers" data-dyn></div>
+    <div class="two">
+      <section class="panel" style="flex:1 1 340px;max-width:440px">
+        <h2>Emergency numbers</h2>
+        <div class="nums" id="numbers" data-dyn></div>
+        <h2 class="mt">Health and support lines</h2>
+        <div class="nums" id="services" data-dyn></div>
+        <h2 class="mt">When you call</h2>
+        <ol class="steps small-steps">
+          <li>Say where you are — area, street, nearest landmark.</li>
+          <li>Say what happened and how many people are hurt.</li>
+          <li>Say if they are awake and breathing.</li>
+          <li>Give your phone number. Don't hang up until told to.</li>
+          <li>Send someone to meet the ambulance outside.</li>
+        </ol>
+      </section>
+      <section class="panel" style="flex:2 1 520px">
+        <h2>First aid — what's happening?</h2>
+        <div class="aid-list" id="aidList" data-dyn></div>
+        <article class="aid-card" id="aidCard" aria-live="polite" data-dyn></article>
+        <p class="muted small" style="margin:0">Based on NHS, Resuscitation Council UK, St John Ambulance, British Red Cross and Anaphylaxis UK guidance. A first aid course is the best way to practise.</p>
+      </section>
+    </div>
+    <section class="panel">
+      <div class="row-between" style="flex-wrap:wrap"><div><h2>My emergency card</h2><p class="muted small" style="margin:4px 0 0">Saved only on this computer. Print it for your wallet so responders know your allergies and medicines.</p></div><button class="btn-ghost" id="printCard" type="button">🖨 Print card</button></div>
+      <div class="card-grid" id="card" data-dyn></div>
+    </section>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="page" id="page-about" hidden>
+  <div class="wrap">
+    <section class="hero">
+      <p class="eyebrow">Future Health Digital Innovation Challenge 2026 · Wellbeing track</p>
+      <h1>To sense is to predict — on your own device.</h1>
+      <p class="lead">WellSense helps people notice changes in their wellbeing early, keep healthier habits, and get personal support over time — with an AI that runs entirely on their own computer, so their health data never leaves it.</p>
+      <div class="acts"><button class="btn-primary" id="demoBtn" type="button">▶ Load demo data</button><button class="btn-ghost" id="exportBtn" type="button">Export my data (CSV)</button><button class="btn-ghost danger" id="clearBtn" type="button">Delete all my data</button></div>
+    </section>
+    <section class="flow" aria-label="How WellSense works">
+      <div class="step-card"><span class="step-ic" style="background:#DBF4EF;color:#0E9F90"><svg class="ico" viewBox="0 0 24 24" style="width:26px;height:26px"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg></span><h3>1 · Sense</h3><p>One-minute daily check-in: mood, energy, stress, sleep, water, activity and optional blood pressure. A weekly two-question mood and anxiety check.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="step-card"><span class="step-ic" style="background:#FDF0D5;color:#C27803"><svg class="ico" viewBox="0 0 24 24" style="width:26px;height:26px"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><h3>2 · Predict</h3><p>WellSense learns each person's own baseline and flags early drifts — less sleep, rising stress, falling mood or activity — days before they add up.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="step-card"><span class="step-ic" style="background:#FCE4DA;color:#D9563B"><svg class="ico" viewBox="0 0 24 24" style="width:26px;height:26px"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span><h3>3 · Support</h3><p>A private AI coach turns those signals into small, practical next steps, and a safety layer points to emergency help and crisis lines when it matters.</p></div>
+    </section>
+    <section class="panel">
+      <h2>Evaluation on simulated users</h2>
+      <div id="evalBox" data-dyn></div>
+    </section>
+    <div class="two">
+      <section class="panel">
+        <h2>Why it matters</h2>
+        <ul class="ticks">
+          <li><b>Earlier, not later.</b> Personal baselines spot change sooner than one-size-fits-all thresholds.</li>
+          <li><b>Private by design.</b> All data and AI stay on the device. No account, no cloud, no upload.</li>
+          <li><b>Works offline and on modest hardware.</b> Tested on a 2018 laptop processor with no special AI chip.</li>
+          <li><b>Explainable.</b> Every signal says what changed, by how much, and compared with what.</li>
+          <li><b>Made for the region.</b> English and Arabic, with Pakistan and UAE emergency numbers and support lines.</li>
+          <li><b>Safe.</b> Red-flag words in English or Arabic trigger emergency guidance and local crisis numbers immediately.</li>
+        </ul>
+      </section>
+      <section class="panel">
+        <h2>How it's built</h2>
+        <dl class="kv" id="techKv" data-dyn></dl>
+        <h2 class="mt">Limits</h2>
+        <p class="muted small" style="margin:0;line-height:1.6">WellSense gives general wellbeing information and pattern alerts. It is not a medical device and does not diagnose. Screening questions (PHQ-2, GAD-2) suggest when to talk to a professional; they don't replace one. The Arabic screening wording is our translation, not the officially validated Arabic version. In an emergency call your local ambulance number.</p>
+      </section>
+    </div>
+    <p class="muted small">Independent entry for the Future Health Digital Innovation Challenge 2026 (Wellbeing track). Not affiliated with or endorsed by Future Health or its partners.</p>
+  </div>
+</section>
+
+<div class="modal" id="modal" hidden data-dyn>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody" class="muted"></div>
+    <div class="row-end" id="modalActs"><button class="btn-ghost" id="modalNo" type="button">Cancel</button><button class="btn-primary" id="modalYes" type="button">Confirm</button></div>
+  </div>
+</div>
+<div class="toasts" id="toasts" aria-live="polite" data-dyn></div>
+<script src="i18n.js"></script>
+<script src="eval_results.js"></script>
+<script src="wellsense.js"></script>
+</body>
+</html>
